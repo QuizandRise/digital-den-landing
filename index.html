@@ -125,6 +125,26 @@
             min-height: 80px;
         }
 
+        /* Success Message Banner */
+        .success-banner {
+            display: none;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid #10b981;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.95rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .submit-btn {
             width: 100%;
             padding: 16px;
@@ -258,6 +278,11 @@
                 Provide your link and let our <span class="q-highlight">QRIOS Engine</span> analyze your brand identity to build a tailored production brief automatically.
             </p>
 
+            <!-- Success Banner (Hidden by default) -->
+            <div id="success-banner" class="success-banner">
+                Thank you! Your project brief has been successfully submitted. We will email you shortly.
+            </div>
+
             <form id="smart-lead-form">
                 <div class="input-group">
                     <label for="brand-name">Your Name / Company Name</label>
@@ -288,6 +313,14 @@
                 <div class="input-group">
                     <label for="message">Project Brief / Notes (Optional)</label>
                     <textarea id="message" class="custom-input" placeholder="Share any specific goals or requirements..."></textarea>
+                </div>
+
+                <!-- Terms and Privacy Checkbox -->
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; text-align: left;">
+                    <input type="checkbox" id="terms" name="terms" required style="width: 20px; height: 20px; cursor: pointer;">
+                    <label for="terms" style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.4;">
+                        I agree to the <a href="/terms" target="_blank" style="color: #60a5fa; text-decoration: none;">Terms & Conditions</a> and <a href="/privacy" target="_blank" style="color: #60a5fa; text-decoration: none;">Privacy Policy</a>.
+                    </label>
                 </div>
 
                 <button type="submit" class="submit-btn">Analyze Brand & Submit Request</button>
@@ -359,6 +392,7 @@
             // --- Part 2: Form Handling & Vercel Endpoint Integration ---
             const smartForm = document.getElementById('smart-lead-form');
             const submitBtn = document.querySelector('.submit-btn');
+            const successBanner = document.getElementById('success-banner');
 
             smartForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -368,12 +402,13 @@
                 submitBtn.style.opacity = '0.7';
                 submitBtn.disabled = true;
 
+                // دقت کن! نام متغیرها در اینجا اصلاح شد تا با سرور (backend) هماهنگ باشد
                 const formData = {
                     name: document.getElementById('brand-name').value,
                     email: document.getElementById('email').value,
                     website: document.getElementById('url').value,
-                    serviceType: document.getElementById('service').options[document.getElementById('service').selectedIndex].text,
-                    message: document.getElementById('message').value || 'No additional notes provided.'
+                    category: document.getElementById('service').options[document.getElementById('service').selectedIndex].text,
+                    notes: document.getElementById('message').value || 'No additional notes provided.'
                 };
 
                 try {
@@ -384,16 +419,21 @@
                     });
 
                     if (response.ok) {
+                        // نمایش پیام موفقیت آمیز روی فرم
+                        successBanner.style.display = 'block';
+                        
                         submitBtn.innerText = 'Request Submitted Successfully ✔️';
                         submitBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
                         smartForm.reset();
                         
+                        // بازگرداندن دکمه و پنهان کردن پیام پس از 5 ثانیه
                         setTimeout(() => {
+                            successBanner.style.display = 'none';
                             submitBtn.innerText = originalBtnText;
                             submitBtn.style.background = 'linear-gradient(135deg, var(--primary-accent), var(--secondary-accent))';
                             submitBtn.style.opacity = '1';
                             submitBtn.disabled = false;
-                        }, 3000);
+                        }, 5000);
                     } else {
                         throw new Error('Server error response');
                     }
