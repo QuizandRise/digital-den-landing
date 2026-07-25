@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Portal | Digital Den</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #0b0f19; 
+            color: #f8fafc; 
+            font-family: 'Inter', sans-serif; 
+            padding: 40px 20px; 
+            line-height: 1.6; 
+        }
+        .dashboard-container { max-width: 900px; margin: 0 auto; }
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 40px; padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .brand h2 { margin: 0; background: linear-gradient(135deg, #fff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03); padding: 30px; 
+            border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); 
+            backdrop-filter: blur(20px); margin-bottom: 25px;
+        }
+        .status-badge {
+            display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+        }
+        .badge-success { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+        .badge-active { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
+        
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        
+        /* استایل‌های بخش پیام‌ها و تیکت‌ها */
+        .updates-section { margin-top: 30px; }
+        .message-thread {
+            display: flex; flex-direction: column; gap: 20px;
+            max-height: 400px; overflow-y: auto; padding-right: 10px;
+        }
+        .msg-box {
+            padding: 16px; border-radius: 12px; max-width: 80%;
+        }
+        .msg-team {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .msg-client {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .msg-header {
+            display: flex; justify-content: space-between; font-size: 0.8rem;
+            color: #94a3b8; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;
+        }
+        .attachment {
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-top: 10px; padding: 8px 12px; background: rgba(0,0,0,0.3);
+            border-radius: 6px; font-size: 0.85rem; color: #a5b4fc; text-decoration: none;
+        }
+        
+        /* فرم ارسال پیام جدید */
+        .input-area {
+            margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        textarea {
+            width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; padding: 12px; color: white; font-family: 'Inter';
+            resize: vertical; min-height: 80px; margin-bottom: 10px; box-sizing: border-box;
+        }
+        .btn {
+            padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: 0.3s;
+        }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-outline { background: transparent; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.2); }
+        .btn-outline:hover { background: rgba(255,255,255,0.05); }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- هدر -->
+        <header>
+            <div class="brand">
+                <h2>Client Portal</h2>
+                <span style="color: #94a3b8; font-size: 0.9rem;">Digital Den by Quiz & Rise Ltd</span>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-weight: 600;">Welcome, Client Name</div>
+                <span style="color: #94a3b8; font-size: 0.9rem;">client@example.com</span>
+            </div>
+        </header>
+
+        <!-- وضعیت پروژه -->
+        <div class="glass-card flex-between">
+            <div>
+                <h3 style="margin: 0 0 5px 0;">Project: Custom Web Platform</h3>
+                <span style="color: #94a3b8; font-size: 0.9rem;">Milestone: Development</span>
+            </div>
+            <div style="text-align: right;">
+                <span class="status-badge badge-success">Escrow Funded: £500</span>
+                <div style="margin-top: 5px;"><span class="status-badge badge-active">In Progress</span></div>
+            </div>
+        </div>
+
+        <!-- بخش ارتباطات رسمی و فایل‌ها -->
+        <div class="glass-card updates-section">
+            <h4 style="margin-top: 0;">Project Updates & Files</h4>
+            
+            <div class="message-thread">
+                <!-- پیام تیم فنی -->
+                <div class="msg-box msg-team">
+                    <div class="msg-header">
+                        <strong style="color: #fff;">Digital Den Team</strong>
+                        <span>Today, 10:30 AM</span>
+                    </div>
+                    <div>
+                        Hello! We have received your escrow payment successfully. Our remote development team has started working on the initial layout. Please review the attached wireframe design and let us know if you have any feedback before we proceed with coding.
+                    </div>
+                    <a href="#" class="attachment">📄 wireframes_v1.pdf</a>
+                </div>
+
+                <!-- پیام مشتری -->
+                <div class="msg-box msg-client">
+                    <div class="msg-header">
+                        <strong style="color: #fff;">You</strong>
+                        <span>Today, 11:15 AM</span>
+                    </div>
+                    <div>
+                        The wireframes look great! I have added a small logo file that I want to be placed in the header. Please proceed with the development.
+                    </div>
+                    <a href="#" class="attachment">🖼️ new_logo.png</a>
+                </div>
+            </div>
+
+            <!-- ارسال آپدیت جدید توسط مشتری -->
+            <div class="input-area">
+                <textarea placeholder="Write a message, provide feedback, or share links..."></textarea>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn btn-outline">📎 Attach File</button>
+                    <button class="btn btn-primary">Post Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
