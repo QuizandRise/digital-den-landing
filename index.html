@@ -3,327 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Den | Professional Digital Solutions</title>
+    <title>Digital Den | Digital Content Agency</title>
+    
+    <!-- Standard Modern English Font (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS for Modern Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { primary: '#3b82f6', accent: '#8b5cf6' }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --text-light: #f8fafc;
-            --text-muted: #94a3b8;
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: radial-gradient(circle at top right, #1e293b, var(--bg-color));
-            color: var(--text-light);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 2rem;
-        }
-
-        /* Portfolio Section */
-        .portfolio-section {
-            width: 100%;
-            max-width: 800px;
-            margin-bottom: 3rem;
-            text-align: center;
-        }
-
-        .portfolio-section h2 {
-            font-size: 2.2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .portfolio-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .portfolio-item {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            padding: 1.5rem;
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s ease;
-        }
-
-        .portfolio-item:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-        }
-
-        .portfolio-item h3 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.2rem;
-        }
-
-        .portfolio-item p {
-            margin: 0;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        /* Form Container */
-        .container {
-            width: 100%;
-            max-width: 500px;
-            padding: 2.5rem;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
+        /* 2026 Modern Glassmorphism Effects */
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-
-        h1 {
-            text-align: center;
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            font-weight: 700;
+        .gradient-text {
+            background: linear-gradient(to right, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-
-        p.subtitle {
-            text-align: center;
-            color: var(--text-muted);
-            margin-bottom: 2rem;
-            font-size: 0.95rem;
-        }
-
-        .form-step {
-            display: none;
-            animation: fadeIn 0.4s ease-in-out;
-        }
-
-        .form-step.active {
-            display: block;
-        }
-
-        .input-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            color: var(--text-light);
-        }
-
-        input, textarea {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--glass-border);
-            border-radius: 8px;
-            color: var(--text-light);
-            font-size: 1rem;
-            box-sizing: border-box;
-            transition: border-color 0.3s;
-        }
-
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 0.85rem;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .btn:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .btn-secondary {
-            background-color: transparent;
-            border: 1px solid var(--glass-border);
-            margin-bottom: 1rem;
-        }
-
-        .btn-secondary:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-
-        .gdpr-group {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 1.5rem;
-        }
-
-        .gdpr-group input[type="checkbox"] {
-            width: auto;
-            margin-top: 4px;
-        }
-
-        .gdpr-group label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            line-height: 1.4;
-        }
-
-        #status-message {
-            margin-top: 1rem;
-            text-align: center;
-            font-size: 0.9rem;
-            display: none;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .step-hidden { display: none; }
+        /* Step Transition Animations */
+        .fade-in { animation: fadeIn 0.4s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body>
+<body class="antialiased selection:bg-accent selection:text-white relative">
+    
+    <!-- Ambient Background Lights -->
+    <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary rounded-full mix-blend-multiply filter blur-[120px] opacity-20 pointer-events-none"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent rounded-full mix-blend-multiply filter blur-[120px] opacity-20 pointer-events-none"></div>
 
-    <!-- Portfolio Section -->
-    <div class="portfolio-section">
-        <h2>Our Recent Projects</h2>
-        <div class="portfolio-grid">
-            <div class="portfolio-item">
-                <h3>Project Alpha</h3>
-                <p>Enterprise cloud infrastructure and security modernization.</p>
-            </div>
-            <div class="portfolio-item">
-                <h3>Project Beta</h3>
-                <p>High-conversion e-commerce platform with decoupled architecture.</p>
-            </div>
-            <div class="portfolio-item">
-                <h3>Project Gamma</h3>
-                <p>Custom compliance-first data management dashboard.</p>
-            </div>
-        </div>
-    </div>
+    <div class="max-w-6xl mx-auto px-4 py-12 relative z-10">
+        <!-- Header & Introduction -->
+        <header class="text-center mb-16 fade-in">
+            <h1 class="text-5xl font-extrabold mb-4 tracking-tight">Welcome to <span class="gradient-text">Digital Den</span></h1>
+            <p class="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+                Creating pure visual and auditory experiences. We transform your vision into powerful video, audio, and digital content.
+            </p>
+        </header>
 
-    <!-- Contact Form Section -->
-    <div class="container">
-        <h1>Digital Den</h1>
-        <p class="subtitle">Let's build something extraordinary together.</p>
-
-        <form id="leadForm">
-            <!-- Step 1: Basic Info -->
-            <div id="step1" class="form-step active">
-                <div class="input-group">
-                    <label for="fullName">Full Name</label>
-                    <input type="text" id="fullName" required placeholder="e.g., John Doe">
+        <!-- Portfolio Section -->
+        <section class="mb-20 fade-in" style="animation-delay: 0.2s;">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-3xl font-bold border-l-4 border-accent pl-4">Our Portfolio</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Video -->
+                <div class="glass-panel rounded-2xl overflow-hidden group cursor-pointer transition-transform hover:-translate-y-2">
+                    <div class="h-48 bg-gray-800 relative">
+                        <img src="https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=600&q=80" alt="Video Production" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-12 h-12 text-white/80" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="font-bold text-xl mb-2">Commercial Teasers</h3>
+                        <p class="text-gray-400 text-sm">Cinematic quality business video production.</p>
+                    </div>
                 </div>
-                <div class="input-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" required placeholder="john@example.com">
+                <!-- Audio/Podcast -->
+                <div class="glass-panel rounded-2xl overflow-hidden group cursor-pointer transition-transform hover:-translate-y-2">
+                    <div class="h-48 bg-gray-800 relative">
+                        <img src="https://images.unsplash.com/photo-1581368135153-a506cf13b1e1?auto=format&fit=crop&w=600&q=80" alt="Audio Production" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <div class="p-5">
+                        <h3 class="font-bold text-xl mb-2">Sound Design & Podcasts</h3>
+                        <p class="text-gray-400 text-sm">Professional studio recording, mixing, and mastering.</p>
+                    </div>
                 </div>
-                <button type="button" class="btn" onclick="nextStep()">Continue to Next Step</button>
+                <!-- Digital Design -->
+                <div class="glass-panel rounded-2xl overflow-hidden group cursor-pointer transition-transform hover:-translate-y-2">
+                    <div class="h-48 bg-gray-800 relative">
+                        <img src="https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=600&q=80" alt="Digital Content" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <div class="p-5">
+                        <h3 class="font-bold text-xl mb-2">Digital Content</h3>
+                        <p class="text-gray-400 text-sm">Visual identity design, motion graphics, and campaigns.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Two-Step Form Section -->
+        <section class="max-w-3xl mx-auto glass-panel rounded-3xl p-8 md:p-12 fade-in" style="animation-delay: 0.4s;">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold mb-2">Start Your Project</h2>
+                <p class="text-gray-400 text-sm" id="form-subtitle">To better understand your requirements, we have a few quick questions.</p>
             </div>
 
-            <!-- Step 2: Message & GDPR -->
-            <div id="step2" class="form-step">
-                <div class="input-group">
-                    <label for="message">How can we help you?</label>
-                    <textarea id="message" rows="4" required placeholder="Tell us about your project requirements..."></textarea>
+            <!-- Progress Indicator -->
+            <div class="flex items-center justify-center mb-8">
+                <div class="flex items-center space-x-4">
+                    <div id="indicator-step1" class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">1</div>
+                    <div class="w-16 h-1 bg-gray-700 rounded"><div id="progress-bar" class="h-full bg-primary rounded w-0 transition-all duration-300"></div></div>
+                    <div id="indicator-step2" class="w-8 h-8 rounded-full bg-gray-700 text-gray-400 flex items-center justify-center font-bold">2</div>
                 </div>
-                
-                <div class="gdpr-group">
-                    <input type="checkbox" id="gdprConsent" required>
-                    <label for="gdprConsent">
-                        I consent to the processing of my personal data in accordance with the UK GDPR and Privacy Policy. I understand that my data will be securely transmitted and stored.
-                    </label>
-                </div>
-
-                <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
-                <button type="submit" class="btn">Submit Request</button>
             </div>
-        </form>
 
-        <div id="status-message"></div>
+            <form id="digital-den-form" class="space-y-6">
+                <!-- Step 1: Basic Info -->
+                <div id="step-1" class="fade-in">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Full Name *</label>
+                            <input type="text" id="name" required class="w-full bg-gray-800/50 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder-gray-500" placeholder="e.g., John Doe">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Corporate or Personal Email *</label>
+                            <input type="email" id="email" required class="w-full bg-gray-800/50 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder-gray-500" placeholder="email@example.com">
+                        </div>
+                    </div>
+                    
+                    <!-- GDPR Checkbox -->
+                    <div class="bg-gray-800/30 border border-gray-700 rounded-xl p-4 mb-6">
+                        <label class="flex items-start cursor-pointer">
+                            <input type="checkbox" id="gdpr" required class="mt-1 w-5 h-5 rounded border-gray-600 text-primary focus:ring-primary focus:ring-offset-gray-900 bg-gray-700">
+                            <span class="ml-3 text-sm text-gray-300 leading-relaxed">
+                                I agree to the <a href="#" class="text-primary hover:underline">Privacy Policy (UK GDPR)</a> and consent to Digital Den processing my data solely for project communication.
+                            </span>
+                        </label>
+                    </div>
+
+                    <button type="button" onclick="nextStep()" class="w-full bg-white text-gray-900 font-bold py-3 px-6 rounded-xl hover:bg-gray-200 transition-colors flex justify-center items-center">
+                        Continue to Next Step
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Step 2: Project Info -->
+                <div id="step-2" class="step-hidden fade-in">
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">What type of project is this? *</label>
+                        <select id="project-type" required class="w-full bg-gray-800/50 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+                            <option value="">Select an option...</option>
+                            <option value="video">Video Production / Teaser / Documentary</option>
+                            <option value="audio">Audio Content / Podcast</option>
+                            <option value="design">Digital Design / Motion Graphics</option>
+                            <option value="full_package">Full Package (Audio, Video, Digital)</option>
+                        </select>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Briefly describe your idea or needs</label>
+                        <textarea id="description" rows="4" class="w-full bg-gray-800/50 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder-gray-500" placeholder="We would like to create a promotional video for our new product..."></textarea>
+                    </div>
+
+                    <div class="flex space-x-4">
+                        <button type="button" onclick="prevStep()" class="w-1/3 bg-gray-700 text-white font-bold py-3 px-6 rounded-xl hover:bg-gray-600 transition-colors">
+                            Back
+                        </button>
+                        <button type="submit" id="submit-btn" class="w-2/3 bg-gradient-to-r from-primary to-accent text-white font-bold py-3 px-6 rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-primary/30 flex justify-center items-center">
+                            Submit Request
+                        </button>
+                    </div>
+                </div>
+            </form>
+            
+            <!-- Success Message -->
+            <div id="success-message" class="step-hidden text-center fade-in py-8">
+                <div class="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">Request Submitted Successfully!</h3>
+                <p class="text-gray-400">The Digital Den team will be in touch with you shortly to discuss the next steps.</p>
+            </div>
+        </section>
     </div>
 
     <script>
-        // Load saved data from LocalStorage
-        document.addEventListener('DOMContentLoaded', () => {
-            if(localStorage.getItem('dd_name')) {
-                document.getElementById('fullName').value = localStorage.getItem('dd_name');
-            }
-            if(localStorage.getItem('dd_email')) {
-                document.getElementById('email').value = localStorage.getItem('dd_email');
-            }
+        // Load saved user data (to prevent re-entry)
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedName = localStorage.getItem('dd_user_name');
+            const savedEmail = localStorage.getItem('dd_user_email');
+            
+            if (savedName) document.getElementById('name').value = savedName;
+            if (savedEmail) document.getElementById('email').value = savedEmail;
         });
 
+        const step1 = document.getElementById('step-1');
+        const step2 = document.getElementById('step-2');
+        const progress = document.getElementById('progress-bar');
+        const ind2 = document.getElementById('indicator-step2');
+        const form = document.getElementById('digital-den-form');
+        const successMsg = document.getElementById('success-message');
+
         function nextStep() {
-            const name = document.getElementById('fullName').value;
+            // Step 1 Validation
+            const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
-            
-            if(name && email && document.getElementById('email').checkValidity()) {
-                // Save to LocalStorage
-                localStorage.setItem('dd_name', name);
-                localStorage.setItem('dd_email', email);
-                
-                document.getElementById('step1').classList.remove('active');
-                document.getElementById('step2').classList.add('active');
-            } else {
-                alert('Please provide a valid name and email address.');
+            const gdpr = document.getElementById('gdpr').checked;
+
+            if(!name || !email || !gdpr) {
+                alert('Please fill in your name, email, and accept the privacy policy.');
+                return;
             }
+
+            // Save to Local Storage for future visits
+            localStorage.setItem('dd_user_name', name);
+            localStorage.setItem('dd_user_email', email);
+
+            step1.classList.add('step-hidden');
+            step2.classList.remove('step-hidden');
+            progress.style.width = '100%';
+            ind2.classList.replace('bg-gray-700', 'bg-primary');
+            ind2.classList.replace('text-gray-400', 'text-white');
         }
 
         function prevStep() {
-            document.getElementById('step2').classList.remove('active');
-            document.getElementById('step1').classList.add('active');
+            step2.classList.add('step-hidden');
+            step1.classList.remove('step-hidden');
+            progress.style.width = '0%';
+            ind2.classList.replace('bg-primary', 'bg-gray-700');
+            ind2.classList.replace('text-white', 'text-gray-400');
         }
 
-        // Handle Form Submission
-        document.getElementById('leadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
             
-            const submitBtn = document.querySelector('button[type="submit"]');
-            const statusMsg = document.getElementById('status-message');
-            
-            submitBtn.innerText = 'Sending...';
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sending...';
             submitBtn.disabled = true;
 
-            const payload = {
-                name: document.getElementById('fullName').value,
+            const formData = {
+                name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
-                message: document.getElementById('message').value
+                projectType: document.getElementById('project-type').value,
+                description: document.getElementById('description').value
             };
 
             try {
-                // فراموش نکنید آدرس API بک‌اند ورسل خود را در خط پایین جایگزین کنید
-                const response = await fetch('YOUR_DIGITAL_DEN_API_URL_HERE', {
+                // Sending to your Vercel Serverless API
+                const response = await fetch('https://digital-den-api.vercel.app/api/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(formData),
                 });
 
                 if (response.ok) {
-                    document.getElementById('leadForm').style.display = 'none';
-                    statusMsg.style.display = 'block';
-                    statusMsg.style.color = '#4ade80'; // Green
-                    statusMsg.innerHTML = '<b>Thank you!</b><br>Your request has been successfully submitted. We will contact you shortly.';
+                    form.classList.add('step-hidden');
+                    document.getElementById('form-subtitle').style.display = 'none';
+                    document.querySelector('.flex.items-center.justify-center.mb-8').style.display = 'none';
+                    successMsg.classList.remove('step-hidden');
                 } else {
-                    throw new Error('API Response not OK');
+                    const errorData = await response.json();
+                    alert('Submission Error: ' + (errorData.message || 'Something went wrong.'));
+                    submitBtn.innerHTML = 'Submit Request';
+                    submitBtn.disabled = false;
                 }
             } catch (error) {
-                statusMsg.style.display = 'block';
-                statusMsg.style.color = '#f87171'; // Red
-                statusMsg.innerText = 'Oops! Something went wrong. Please try again later.';
-                submitBtn.innerText = 'Submit Request';
+                console.error('Error:', error);
+                alert('Connection error. Please check your internet connection and try again.');
+                submitBtn.innerHTML = 'Submit Request';
                 submitBtn.disabled = false;
             }
         });
