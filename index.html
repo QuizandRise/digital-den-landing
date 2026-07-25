@@ -1,456 +1,73 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Den | Smart Project Launch</title>
-    <!-- Modern Inter Font for sleek UK branding -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <title>Terms & Conditions | Digital Den</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        /* Brand Design Tokens */
-        :root {
-            --bg-color: #0b0f19;
-            --surface-color: rgba(255, 255, 255, 0.03);
-            --surface-border: rgba(255, 255, 255, 0.08);
-            --primary-accent: #3b82f6;
-            --primary-glow: rgba(59, 130, 246, 0.4);
-            --secondary-accent: #8b5cf6;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+        body { 
+            background-color: #0b0f19; 
+            color: #f8fafc; 
+            font-family: 'Inter', sans-serif; 
+            padding: 40px 20px; 
+            line-height: 1.8; 
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        .legal-container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: rgba(255, 255, 255, 0.03); 
+            padding: 50px; 
+            border-radius: 24px; 
+            border: 1px solid rgba(255,255,255,0.08); 
+            backdrop-filter: blur(20px); 
         }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
+        h1 { 
+            background: linear-gradient(135deg, #fff, #a5b4fc); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            margin-bottom: 30px; 
+            font-size: 2rem;
+        }
+        .back-btn { 
+            display: inline-flex; 
             align-items: center;
-            justify-content: center;
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
-            padding: 20px;
+            margin-bottom: 30px; 
+            color: #3b82f6; 
+            text-decoration: none; 
+            font-weight: 600; 
+            padding: 10px 20px; 
+            background: rgba(59, 130, 246, 0.1); 
+            border-radius: 8px; 
+            transition: all 0.3s ease; 
         }
-
-        /* Glassmorphism Main Layout */
-        .digital-den-container {
-            display: flex;
-            flex-wrap: wrap;
-            width: 100%;
-            max-width: 1280px;
-            background: var(--surface-color);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--surface-border);
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
+        .back-btn:hover { 
+            background: rgba(59, 130, 246, 0.25); 
+            transform: translateX(-5px);
         }
-
-        /* ----- Form Section ----- */
-        .form-panel {
-            flex: 1;
-            min-width: 340px;
-            padding: 50px;
-            position: relative;
-        }
-
-        .header-title {
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin-bottom: 10px;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #fff, #a5b4fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .header-subtitle {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            line-height: 1.6;
-            margin-bottom: 40px;
-        }
-
-        .q-highlight {
-            color: var(--primary-accent);
-            font-weight: 700;
-            text-shadow: 0 0 10px var(--primary-glow);
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: #cbd5e1;
-        }
-
-        .custom-input {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 14px 16px;
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-        }
-
-        .custom-input:focus {
-            outline: none;
-            border-color: var(--primary-accent);
-            box-shadow: 0 0 15px var(--primary-glow);
-            background: rgba(0, 0, 0, 0.45);
-        }
-
-        textarea.custom-input {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        /* Success Message Banner */
-        .success-banner {
-            display: none;
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid #10b981;
-            color: #10b981;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 500;
-            font-size: 0.95rem;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 16px;
-            margin-top: 10px;
-            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 25px rgba(99, 102, 241, 0.4);
-        }
-
-        /* ----- Portfolio Showcase Panel ----- */
-        .portfolio-panel {
-            flex: 1.2;
-            min-width: 340px;
-            padding: 50px;
-            background: rgba(0, 0, 0, 0.3);
-            border-left: 1px solid var(--surface-border);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .portfolio-panel h3 {
-            font-size: 1.3rem;
-            margin-bottom: 25px;
-            font-weight: 600;
-            letter-spacing: -0.01em;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .portfolio-panel h3::before {
-            content: '';
-            display: block;
-            width: 6px;
-            height: 22px;
-            background: var(--primary-accent);
-            border-radius: 4px;
-        }
-
-        /* Grid System */
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: 20px;
-            align-content: start;
-        }
-
-        .portfolio-card {
-            position: relative;
-            border-radius: 16px;
-            overflow: hidden;
-            aspect-ratio: 4/3;
-            background: #1e293b;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-        }
-
-        .portfolio-card img, 
-        .portfolio-card video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.6s ease, filter 0.3s ease;
-            filter: brightness(0.85);
-        }
-
-        .portfolio-card:hover img, 
-        .portfolio-card:hover video {
-            transform: scale(1.08);
-            filter: brightness(1.1);
-        }
-
-        .card-badge {
-            position: absolute;
-            bottom: 12px;
-            left: 12px;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(6px);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            border: 1px solid rgba(255,255,255,0.1);
-            pointer-events: none;
-            letter-spacing: 0.02em;
-        }
-
-        /* Animation Filtering Classes */
-        .hidden-card {
-            opacity: 0;
-            transform: scale(0.8) translateY(20px);
-            position: absolute;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        /* Mobile Responsiveness */
-        @media (max-width: 768px) {
-            .portfolio-panel {
-                border-left: none;
-                border-top: 1px solid var(--surface-border);
-                padding: 30px 20px;
-            }
-            .form-panel {
-                padding: 30px 20px;
-            }
-        }
+        h3 { color: #e2e8f0; margin-top: 25px; margin-bottom: 10px; }
+        p { color: #94a3b8; margin-bottom: 15px; font-size: 0.95rem; }
     </style>
 </head>
 <body>
-
-    <div class="digital-den-container">
+    <div class="legal-container">
+        <!-- در اینجا لینک کامل صفحه فرود شما قرار گرفته است -->
+        <a href="https://quizandrise.com" class="back-btn">← Back to Digital Den</a>
         
-        <!-- Form Panel (Left) -->
-        <div class="form-panel">
-            <h1 class="header-title">Start Your Project</h1>
-            <p class="header-subtitle">
-                Provide your link and let our <span class="q-highlight">QRIOS Engine</span> analyze your brand identity to build a tailored production brief automatically.
-            </p>
+        <h1>Terms & Conditions</h1>
+        <p>Last updated: July 2026</p>
+        
+        <h3>1. Introduction</h3>
+        <p>Welcome to Digital Den. These Terms & Conditions govern your use of our project launch framework, services, and website. By submitting a project brief, you agree to comply with and be bound by these terms.</p>
+        
+        <h3>2. Corporate Identity</h3>
+        <p>Digital Den is a digital service operated by Quiz & Rise Ltd, a company registered in Scotland (Company No. SC848141). Any contracts or agreements formed through this platform are legally bound to Quiz & Rise Ltd.</p>
 
-            <!-- Success Banner (Hidden by default) -->
-            <div id="success-banner" class="success-banner">
-                Thank you! Your project brief has been successfully submitted. We will email you shortly.
-            </div>
+        <h3>3. Project Submissions</h3>
+        <p>When you submit a project through our QRIOS Engine, our team will review the requirements. Submission of a form does not constitute a binding production contract until a formal proposal is accepted by both parties.</p>
 
-            <form id="smart-lead-form">
-                <div class="input-group">
-                    <label for="brand-name">Your Name / Company Name</label>
-                    <input type="text" id="brand-name" class="custom-input" placeholder="e.g. Acme Corp" required>
-                </div>
-
-                <div class="input-group">
-                    <label for="email">Work Email</label>
-                    <input type="email" id="email" class="custom-input" placeholder="name@company.co.uk" required>
-                </div>
-
-                <div class="input-group">
-                    <label for="url">Website or Social URL (for QRIOS analysis)</label>
-                    <input type="url" id="url" class="custom-input" placeholder="https://" required>
-                </div>
-
-                <div class="input-group">
-                    <label for="service">Service Category</label>
-                    <select id="service" class="custom-input" required>
-                        <option value="all">View All Capabilities...</option>
-                        <option value="video">AI Video Production</option>
-                        <option value="design">Brand Visuals & Graphics</option>
-                        <option value="brochure">Corporate Brochures</option>
-                        <option value="audio">Audio & Voiceover</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label for="message">Project Brief / Notes (Optional)</label>
-                    <textarea id="message" class="custom-input" placeholder="Share any specific goals or requirements..."></textarea>
-                </div>
-
-                <!-- Terms and Privacy Checkbox -->
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; text-align: left;">
-                    <input type="checkbox" id="terms" name="terms" required style="width: 20px; height: 20px; cursor: pointer;">
-                    <label for="terms" style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.4;">
-                        I agree to the <a href="https://digital-den-api.vercel.app/terms.html" target="_blank" style="color: #60a5fa; text-decoration: none;">Terms & Conditions</a> and <a href="https://digital-den-api.vercel.app/privacy.html" target="_blank" style="color: #60a5fa; text-decoration: none;">Privacy Policy</a>.
-                    </label>
-                </div>
-
-                <button type="submit" class="submit-btn">Analyze Brand & Submit Request</button>
-            </form>
-        </div>
-
-        <!-- Portfolio Showcase (Right) -->
-        <div class="portfolio-panel">
-            <h3>Digital Den Showcase</h3>
-            
-            <div class="gallery-grid" id="gallery">
-                
-                <!-- Item 1: Video -->
-                <div class="portfolio-card" data-category="video">
-                    <video autoplay loop muted playsinline>
-                        <source src="https://res.cloudinary.com/demo/video/upload/q_auto/dog.mp4" type="video/mp4">
-                    </video>
-                    <div class="card-badge">AI Video</div>
-                </div>
-
-                <!-- Item 2: Design -->
-                <div class="portfolio-card" data-category="design">
-                    <img src="https://images.unsplash.com/photo-1600132806370-bf17e65e942f?q=80&w=600&auto=format&fit=crop" alt="Brand Design">
-                    <div class="card-badge">Brand Design</div>
-                </div>
-
-                <!-- Item 3: Brochure -->
-                <div class="portfolio-card" data-category="brochure">
-                    <img src="https://images.unsplash.com/photo-1586075010923-2dd4570fb338?q=80&w=600&auto=format&fit=crop" alt="Brochure">
-                    <div class="card-badge">Corporate Brochure</div>
-                </div>
-
-                <!-- Item 4: Audio / Motion -->
-                <div class="portfolio-card" data-category="audio">
-                    <video autoplay loop muted playsinline>
-                        <source src="https://res.cloudinary.com/demo/video/upload/q_auto/snow_horses.mp4" type="video/mp4">
-                    </video>
-                    <div class="card-badge">Audio & Motion</div>
-                </div>
-
-            </div>
-        </div>
-
+        <br>
+        <p><em>For detailed inquiries, please contact us at info@quizandrise.com</em></p>
     </div>
-
-    <!-- Integrated JS: Dynamic Filtering & Vercel API Submission -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // --- Part 1: Gallery Filtering & Animation ---
-            const serviceSelect = document.getElementById('service');
-            const portfolioCards = document.querySelectorAll('.portfolio-card');
-
-            serviceSelect.addEventListener('change', (e) => {
-                const selected = e.target.value;
-
-                portfolioCards.forEach(card => {
-                    const category = card.getAttribute('data-category');
-                    if (selected === 'all' || selected === category) {
-                        card.classList.remove('hidden-card');
-                        setTimeout(() => {
-                            card.style.position = 'relative';
-                        }, 50);
-                    } else {
-                        card.classList.add('hidden-card');
-                    }
-                });
-            });
-
-            // --- Part 2: Form Handling & Vercel Endpoint Integration ---
-            const smartForm = document.getElementById('smart-lead-form');
-            const submitBtn = document.querySelector('.submit-btn');
-            const successBanner = document.getElementById('success-banner');
-
-            smartForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const originalBtnText = submitBtn.innerText;
-                submitBtn.innerText = 'Analyzing & Sending to QRIOS...';
-                submitBtn.style.opacity = '0.7';
-                submitBtn.disabled = true;
-
-                // دقت کن! نام متغیرها در اینجا اصلاح شد تا با سرور (backend) هماهنگ باشد
-                const formData = {
-                    name: document.getElementById('brand-name').value,
-                    email: document.getElementById('email').value,
-                    website: document.getElementById('url').value,
-                    category: document.getElementById('service').options[document.getElementById('service').selectedIndex].text,
-                    notes: document.getElementById('message').value || 'No additional notes provided.'
-                };
-
-                try {
-                    const response = await fetch('/api/send', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(formData)
-                    });
-
-                    if (response.ok) {
-                        // نمایش پیام موفقیت آمیز روی فرم
-                        successBanner.style.display = 'block';
-                        
-                        submitBtn.innerText = 'Request Submitted Successfully ✔️';
-                        submitBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-                        smartForm.reset();
-                        
-                        // بازگرداندن دکمه و پنهان کردن پیام پس از 5 ثانیه
-                        setTimeout(() => {
-                            successBanner.style.display = 'none';
-                            submitBtn.innerText = originalBtnText;
-                            submitBtn.style.background = 'linear-gradient(135deg, var(--primary-accent), var(--secondary-accent))';
-                            submitBtn.style.opacity = '1';
-                            submitBtn.disabled = false;
-                        }, 5000);
-                    } else {
-                        throw new Error('Server error response');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    submitBtn.innerText = 'Submission Error! Please Retry ❌';
-                    submitBtn.style.background = 'linear-gradient(135deg, #ef4444, #b91c1c)';
-                    
-                    setTimeout(() => {
-                        submitBtn.innerText = originalBtnText;
-                        submitBtn.style.background = 'linear-gradient(135deg, var(--primary-accent), var(--secondary-accent))';
-                        submitBtn.style.opacity = '1';
-                        submitBtn.disabled = false;
-                    }, 3000);
-                }
-            });
-        });
-    </script>
 </body>
 </html>
