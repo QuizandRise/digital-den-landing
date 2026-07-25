@@ -1,8 +1,10 @@
 export default async function handler(req, res) {
+  // اجازه فقط برای درخواست‌های POST
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
+  // دریافت اطلاعات وارد شده توسط مشتری در فرم
   const { name, email, website, category, notes } = req.body;
 
   try {
@@ -13,28 +15,32 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'Digital Den <onboarding@resend.dev>',
-        to: 'hamidmashhoon@gmail.com', 
-        subject: `پروژه جدید: ${category} از طرف ${name}`,
+        from: 'Digital Den <info@quizandrise.com>', 
+        to: [email], // ارسال خودکار رسید به ایمیل مشتری
+        subject: 'We received your project brief! - Digital Den',
         html: `
-          <h3>درخواست جدید از طرف فرم Digital Den</h3>
-          <p><strong>نام/شرکت:</strong> ${name}</p>
-          <p><strong>ایمیل مشتری:</strong> ${email}</p>
-          <p><strong>وب‌سایت:</strong> ${website}</p>
-          <p><strong>دسته‌بندی خدمات:</strong> ${category}</p>
-          <p><strong>توضیحات:</strong> ${notes}</p>
+          <p>Dear <strong>${name}</strong>,</p>
+          <p>Thank you for reaching out to Digital Den! We have successfully received your project brief.</p>
+          <p>Our team is currently reviewing your requirements and will get back to you shortly to discuss the next steps.</p>
+          <br>
+          <p>Best regards,</p>
+          <p>The Digital Den Team<br>Quiz & Rise Ltd</p>
         `
       })
     });
 
     const data = await response.json();
 
-    if (response.ok) {
-      res.status(200).json({ success: true, data });
-    } else {
-      res.status(400).json({ success: false, data });
+    // بررسی وجود خطا از سمت Resend
+    if (!response.ok) {
+      return res.status(response.status).json({ message: 'Error from Resend', error: data });
     }
+
+    // پیام موفقیت‌آمیز بودن ارسال
+    return res.status(200).json({ message: 'Email sent successfully', data });
+    
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    // خطای سرور
+    return res.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 }
