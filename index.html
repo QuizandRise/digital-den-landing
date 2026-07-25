@@ -21,11 +21,57 @@
             background: radial-gradient(circle at top right, #1e293b, var(--bg-color));
             color: var(--text-light);
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            padding: 2rem;
         }
 
+        /* Portfolio Section */
+        .portfolio-section {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .portfolio-section h2 {
+            font-size: 2.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .portfolio-item {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .portfolio-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .portfolio-item h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.2rem;
+        }
+
+        .portfolio-item p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Form Container */
         .container {
             width: 100%;
             max-width: 500px;
@@ -149,9 +195,29 @@
 </head>
 <body>
 
+    <!-- Portfolio Section -->
+    <div class="portfolio-section">
+        <h2>Our Recent Projects</h2>
+        <div class="portfolio-grid">
+            <div class="portfolio-item">
+                <h3>Project Alpha</h3>
+                <p>Enterprise cloud infrastructure and security modernization.</p>
+            </div>
+            <div class="portfolio-item">
+                <h3>Project Beta</h3>
+                <p>High-conversion e-commerce platform with decoupled architecture.</p>
+            </div>
+            <div class="portfolio-item">
+                <h3>Project Gamma</h3>
+                <p>Custom compliance-first data management dashboard.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Form Section -->
     <div class="container">
         <h1>Digital Den</h1>
-        <p class="subtitle">Innovating your digital presence.</p>
+        <p class="subtitle">Let's build something extraordinary together.</p>
 
         <form id="leadForm">
             <!-- Step 1: Basic Info -->
@@ -171,7 +237,7 @@
             <div id="step2" class="form-step">
                 <div class="input-group">
                     <label for="message">How can we help you?</label>
-                    <textarea id="message" rows="4" required placeholder="Tell us about your project..."></textarea>
+                    <textarea id="message" rows="4" required placeholder="Tell us about your project requirements..."></textarea>
                 </div>
                 
                 <div class="gdpr-group">
@@ -238,7 +304,7 @@
             };
 
             try {
-                // اینجا آدرس API بک‌اند ورسل خود را جایگزین کنید
+                // فراموش نکنید آدرس API بک‌اند ورسل خود را در خط پایین جایگزین کنید
                 const response = await fetch('YOUR_DIGITAL_DEN_API_URL_HERE', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
