@@ -412,7 +412,8 @@
                 };
 
                 try {
-                    const response = await fetch('/api/send', {
+                    // در اینجا آدرس را به سرور اصلی شما در ورسل متصل کردم
+                    const response = await fetch('https://digital-den-api.vercel.app/api/create-project', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formData)
