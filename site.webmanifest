@@ -1,0 +1,11 @@
+{
+  "name": "Digital Den",
+  "short_name": "Digital Den",
+  "description": "Intelligent digital systems by Digital Den, a division of Quiz & Rise Ltd.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07090d",
+  "theme_color": "#07090d",
+  "lang": "en-GB",
+  "categories": ["business", "productivity", "technology"]
+}
