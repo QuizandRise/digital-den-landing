@@ -1,152 +1,71 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Active Portal | Digital Den</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
-    <style>
-        body { 
-            background-color: #0b0f19; 
-            color: #f8fafc; 
-            font-family: 'Inter', sans-serif; 
-            padding: 40px 20px; 
-            line-height: 1.6; 
-        }
-        .dashboard-container { max-width: 900px; margin: 0 auto; }
-        header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 40px; padding-bottom: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
-        .brand h2 { margin: 0; background: linear-gradient(135deg, #fff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03); padding: 30px; 
-            border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); 
-            backdrop-filter: blur(20px); margin-bottom: 25px;
-        }
-        .status-badge {
-            display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
-        }
-        .badge-success { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
-        .badge-active { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
-        
-        .flex-between { display: flex; justify-content: space-between; align-items: center; }
-        
-        /* استایل‌های بخش پیام‌ها و تیکت‌ها */
-        .updates-section { margin-top: 30px; }
-        .message-thread {
-            display: flex; flex-direction: column; gap: 20px;
-            max-height: 400px; overflow-y: auto; padding-right: 10px;
-        }
-        .msg-box {
-            padding: 16px; border-radius: 12px; max-width: 80%;
-        }
-        .msg-team {
-            background: rgba(59, 130, 246, 0.08);
-            border: 1px solid rgba(59, 130, 246, 0.15);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
-        .msg-client {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-        .msg-header {
-            display: flex; justify-content: space-between; font-size: 0.8rem;
-            color: #94a3b8; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;
-        }
-        .attachment {
-            display: inline-flex; align-items: center; gap: 8px;
-            margin-top: 10px; padding: 8px 12px; background: rgba(0,0,0,0.3);
-            border-radius: 6px; font-size: 0.85rem; color: #a5b4fc; text-decoration: none;
-        }
-        
-        /* فرم ارسال پیام جدید */
-        .input-area {
-            margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08);
-        }
-        textarea {
-            width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px; padding: 12px; color: white; font-family: 'Inter';
-            resize: vertical; min-height: 80px; margin-bottom: 10px; box-sizing: border-box;
-        }
-        .btn {
-            padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: 0.3s;
-        }
-        .btn-primary { background: #3b82f6; color: white; }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-outline { background: transparent; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.2); }
-        .btn-outline:hover { background: rgba(255,255,255,0.05); }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07090d">
+<title>Digital Den Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07090d;--panel:#111621;--panel2:#171d2c;--line:rgba(255,255,255,.09);--text:#f7f5ef;--muted:#9da5b4;--cyan:#52d9ff;--violet:#8c6cff;--green:#70d7a7;--amber:#f3c66f;--red:#ff8b96;--r:20px;--shadow:0 24px 70px rgba(0,0,0,.35)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 15% 0,rgba(140,108,255,.14),transparent 24%),radial-gradient(circle at 85% 5%,rgba(82,217,255,.10),transparent 25%),var(--bg);color:var(--text);font:14px/1.55 "DM Sans",sans-serif;min-height:100vh}button,input,textarea,select{font:inherit}button{cursor:pointer}.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;padding:20px 16px;border-right:1px solid var(--line);background:rgba(7,9,13,.86);backdrop-filter:blur(20px)}.brand{display:flex;align-items:center;gap:11px;padding:4px 8px 22px}.mark{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,var(--violet),var(--cyan));color:#071017;font:800 13px Manrope}.brand strong{font:800 15px Manrope}.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:.13em;text-transform:uppercase;margin-top:3px}.nav-label{color:#697284;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:14px 11px 8px}.nav-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px 11px;border:0;border-radius:12px;color:#cbd1dc;background:transparent;text-align:left;margin:2px 0}.nav-item:hover,.nav-item.active{background:rgba(82,217,255,.08);color:#fff}.nav-item.active{border:1px solid rgba(82,217,255,.17)}.nav-item span:first-child{width:22px;text-align:center}.sidebar-foot{position:absolute;left:16px;right:16px;bottom:18px}.profile{display:flex;gap:10px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03)}.avatar{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#252d41;color:var(--cyan);font-weight:800}.profile small{display:block;color:var(--muted)}.main{min-width:0}.topbar{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:14px;padding:16px 28px;border-bottom:1px solid var(--line);background:rgba(7,9,13,.82);backdrop-filter:blur(18px)}.search{min-width:260px;max-width:480px;flex:1;border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:12px;padding:10px 13px;color:var(--text)}.top-actions{display:flex;gap:9px;align-items:center}.btn{border:1px solid var(--line);border-radius:12px;padding:10px 13px;background:rgba(255,255,255,.04);color:var(--text);font-weight:700}.btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.07)}.btn.primary{background:linear-gradient(135deg,var(--cyan),#b7f4ff);color:#071017;border-color:transparent}.btn.danger{color:var(--red);border-color:rgba(255,139,150,.25)}.content{padding:26px 28px 46px;max-width:1500px;margin:auto}.page-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:22px}.eyebrow{color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;margin:0 0 7px}.page-head h1{font:800 clamp(27px,3vw,42px)/1.05 Manrope;margin:0;letter-spacing:-.04em}.page-head p{margin:8px 0 0;color:var(--muted)}.role-switch{display:flex;gap:6px;border:1px solid var(--line);background:rgba(255,255,255,.03);padding:5px;border-radius:14px}.role-switch button{border:0;background:transparent;color:var(--muted);padding:8px 11px;border-radius:10px;font-weight:700}.role-switch button.active{background:var(--panel2);color:#fff}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:16px}.card{border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025));box-shadow:var(--shadow)}.stat{padding:18px}.stat small{color:var(--muted)}.stat strong{display:block;font:800 28px Manrope;margin-top:8px}.stat .trend{font-size:11px;color:var(--green);margin-top:6px}.grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(330px,.75fr);gap:16px}.panel{padding:20px}.panel-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px}.panel-head h2,.panel-head h3{font:800 18px Manrope;margin:0}.panel-head p{color:var(--muted);font-size:12px;margin:3px 0 0}.project{padding:18px;border:1px solid var(--line);border-radius:17px;background:rgba(0,0,0,.18);margin-bottom:12px}.project-top{display:flex;justify-content:space-between;gap:16px}.project h3{font:800 18px Manrope;margin:0}.meta{color:var(--muted);font-size:12px;margin-top:5px}.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;border:1px solid var(--line);font-size:10px;font-weight:800}.green{color:var(--green);background:rgba(112,215,167,.08)}.amber{color:var(--amber);background:rgba(243,198,111,.08)}.cyan{color:var(--cyan);background:rgba(82,217,255,.08)}.red{color:var(--red);background:rgba(255,139,150,.08)}.progress{height:7px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden;margin:15px 0}.progress span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--violet),var(--cyan))}.workstreams{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.workstream{padding:13px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}.ws-top{display:flex;justify-content:space-between;gap:10px}.workstream h4{margin:0;font:700 13px Manrope}.assignee{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px;margin-top:10px}.mini-avatar{width:23px;height:23px;border-radius:8px;display:grid;place-items:center;background:#273047;color:#fff;font-size:9px}.queue-item,.activity,.message-row{display:flex;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}.queue-item:last-child,.activity:last-child,.message-row:last-child{border-bottom:0}.queue-item strong,.activity strong{display:block;font-size:12px}.queue-item small,.activity small{color:var(--muted)}.queue-actions{display:flex;gap:7px;margin-top:8px}.queue-actions .btn{padding:7px 9px;font-size:10px}.security-box{padding:15px;border:1px solid rgba(243,198,111,.23);background:rgba(243,198,111,.06);border-radius:15px;margin-top:14px}.security-box h4{margin:0 0 7px;color:var(--amber)}.security-box p{margin:0;color:#c9c0ad;font-size:12px}.toggle-row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.toggle-row:last-child{border-bottom:0}.toggle-row small{display:block;color:var(--muted);max-width:360px}.switch{position:relative;width:42px;height:24px;border-radius:999px;background:#30384a;border:0}.switch:after{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.2s}.switch.on{background:var(--cyan)}.switch.on:after{left:21px;background:#071017}.chat-layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:560px;overflow:hidden}.thread-list{border-right:1px solid var(--line);padding:12px}.thread{padding:12px;border-radius:13px;margin-bottom:6px}.thread.active,.thread:hover{background:rgba(82,217,255,.07)}.thread small{display:block;color:var(--muted)}.chat{display:flex;flex-direction:column;min-width:0}.chat-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px}.messages{padding:18px;display:flex;flex-direction:column;gap:12px;flex:1;background:rgba(0,0,0,.13)}.bubble{max-width:75%;padding:12px 14px;border-radius:15px;background:var(--panel2);border:1px solid var(--line)}.bubble.me{align-self:flex-end;background:rgba(82,217,255,.09)}.bubble.flagged{border-color:rgba(255,139,150,.38);background:rgba(255,139,150,.08)}.bubble small{display:block;color:var(--muted);margin-top:6px}.flag{display:inline-block;margin-top:8px;color:var(--red);font-size:10px;font-weight:800}.composer{padding:14px;border-top:1px solid var(--line);display:flex;gap:9px}.composer textarea{flex:1;resize:none;min-height:44px;max-height:120px;border:1px solid var(--line);border-radius:12px;padding:11px 12px;color:var(--text);background:rgba(0,0,0,.28)}.hidden{display:none!important}.moderation{margin-top:16px}.rule{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}.rule:last-child{border-bottom:0}.rule code{color:var(--cyan);font-size:11px}.mobile-nav{display:none}
+@media(max-width:1050px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.app{grid-template-columns:84px minmax(0,1fr)}.sidebar{padding:16px 10px}.brand span:last-child,.nav-item span:last-child,.profile div:last-child,.nav-label{display:none}.brand{justify-content:center}.nav-item{justify-content:center}.sidebar-foot{left:10px;right:10px}.profile{justify-content:center}.search{min-width:0}.chat-layout{grid-template-columns:210px minmax(0,1fr)}}
+@media(max-width:720px){.app{display:block}.sidebar{display:none}.topbar{padding:12px 14px}.topbar .search{display:none}.content{padding:18px 12px 80px}.page-head{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:1fr 1fr;gap:9px}.stat{padding:14px}.stat strong{font-size:23px}.workstreams{grid-template-columns:1fr}.chat-layout{grid-template-columns:1fr}.thread-list{display:none}.bubble{max-width:88%}.mobile-nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;z-index:50;left:8px;right:8px;bottom:8px;padding:7px;border:1px solid var(--line);border-radius:16px;background:rgba(7,9,13,.94);backdrop-filter:blur(16px)}.mobile-nav button{border:0;background:transparent;color:var(--muted);font-size:10px;padding:6px}.mobile-nav button.active{color:var(--cyan)}.role-switch{width:100%;overflow:auto}.role-switch button{flex:1}.top-actions .btn:not(.primary){display:none}}
+</style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- هدر -->
-        <header>
-            <div class="brand">
-                <h2>Client Portal</h2>
-                <span style="color: #94a3b8; font-size: 0.9rem;">Digital Den by Quiz & Rise Ltd</span>
-            </div>
-            <div style="text-align: right;">
-                <div style="font-weight: 600;">Welcome, Client Name</div>
-                <span style="color: #94a3b8; font-size: 0.9rem;">client@example.com</span>
-            </div>
-        </header>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><span class="mark">DD</span><span><strong>Digital Den</strong><small>Workspace</small></span></div>
+  <div class="nav-label">Workspace</div>
+  <button class="nav-item active" data-view="overview"><span>◫</span><span>Overview</span></button>
+  <button class="nav-item" data-view="projects"><span>◇</span><span>Projects</span></button>
+  <button class="nav-item" data-view="review"><span>✓</span><span>Review Queue</span></button>
+  <button class="nav-item" data-view="messages"><span>◌</span><span>Messages</span></button>
+  <button class="nav-item" data-view="security"><span>⌁</span><span>Communication Control</span></button>
+  <div class="nav-label">Management</div>
+  <button class="nav-item"><span>♙</span><span>Clients</span></button>
+  <button class="nav-item"><span>♧</span><span>Team</span></button>
+  <button class="nav-item"><span>▤</span><span>Audit Log</span></button>
+  <div class="sidebar-foot"><div class="profile"><span class="avatar">AM</span><div><strong>Abdul Hamid</strong><small>Super Admin</small></div></div></div>
+</aside>
+<main class="main">
+  <header class="topbar"><input class="search" placeholder="Search clients, projects, tasks or files…"><div class="top-actions"><button class="btn">Notifications 3</button><button class="btn primary">+ New Project</button></div></header>
+  <div class="content">
+    <section class="page-head"><div><p class="eyebrow">Digital Den Operations</p><h1 id="page-title">Manager Workspace</h1><p id="page-subtitle">Control projects, team assignments, reviews and client delivery.</p></div><div class="role-switch"><button class="active" data-role="manager">Manager</button><button data-role="member">Team Member</button><button data-role="client">Client</button></div></section>
 
-        <!-- وضعیت پروژه -->
-        <div class="glass-card flex-between">
-            <div>
-                <h3 style="margin: 0 0 5px 0;">Project: Custom Web Platform</h3>
-                <span style="color: #94a3b8; font-size: 0.9rem;">Milestone: Development</span>
-            </div>
-            <div style="text-align: right;">
-                <span class="status-badge badge-success">Escrow Funded: £500</span>
-                <div style="margin-top: 5px;"><span class="status-badge badge-active">In Progress</span></div>
-            </div>
+    <section id="overview" class="view">
+      <div class="stats"><div class="card stat"><small>Active projects</small><strong>12</strong><div class="trend">+3 this month</div></div><div class="card stat"><small>Awaiting review</small><strong>5</strong><div class="trend" style="color:var(--amber)">Manager action required</div></div><div class="card stat"><small>Ready to deliver</small><strong>3</strong><div class="trend">All checks passed</div></div><div class="card stat"><small>Flagged messages</small><strong>2</strong><div class="trend" style="color:var(--red)">Review communication</div></div></div>
+      <div class="grid">
+        <div class="card panel">
+          <div class="panel-head"><div><h2>Priority project</h2><p>MealDen Partner Campaign · DD-2048</p></div><span class="badge cyan">72% complete</span></div>
+          <div class="project"><div class="project-top"><div><h3>Campaign launch package</h3><div class="meta">Client: MealDen · Delivery target: 18 August</div></div><span class="badge green">On track</span></div><div class="progress"><span style="width:72%"></span></div>
+          <div class="workstreams"><div class="workstream"><div class="ws-top"><h4>Brand Design</h4><span class="badge green">Approved</span></div><div class="assignee"><span class="mini-avatar">SK</span> Sara · Designer</div></div><div class="workstream"><div class="ws-top"><h4>Landing Page</h4><span class="badge amber">Review</span></div><div class="assignee"><span class="mini-avatar">OA</span> Omar · Developer</div></div><div class="workstream"><div class="ws-top"><h4>Promotional Video</h4><span class="badge cyan">In progress</span></div><div class="assignee"><span class="mini-avatar">MN</span> Mina · Editor</div></div><div class="workstream"><div class="ws-top"><h4>Ad Copy</h4><span class="badge red">Changes requested</span></div><div class="assignee"><span class="mini-avatar">RH</span> Rania · Copywriter</div></div></div></div>
         </div>
+        <div class="card panel"><div class="panel-head"><div><h3>Review queue</h3><p>Work submitted by team members</p></div><span class="badge amber">5 pending</span></div><div class="queue-item"><span class="mini-avatar">OA</span><div><strong>Landing page responsive build</strong><small>Submitted 18 minutes ago</small><div class="queue-actions"><button class="btn primary">Review</button><button class="btn">Request changes</button></div></div></div><div class="queue-item"><span class="mini-avatar">MN</span><div><strong>Campaign video cut v3</strong><small>Submitted 1 hour ago</small><div class="queue-actions"><button class="btn primary">Review</button><button class="btn">Request changes</button></div></div></div><div class="security-box"><h4>Communication alert</h4><p>A team member attempted to share an external contact invitation. The message was blocked and held for manager review.</p></div></div>
+      </div>
+    </section>
 
-        <!-- بخش ارتباطات رسمی و فایل‌ها -->
-        <div class="glass-card updates-section">
-            <h4 style="margin-top: 0;">Project Updates & Files</h4>
-            
-            <div class="message-thread">
-                <!-- پیام تیم فنی -->
-                <div class="msg-box msg-team">
-                    <div class="msg-header">
-                        <strong style="color: #fff;">Digital Den Team</strong>
-                        <span>Today, 10:30 AM</span>
-                    </div>
-                    <div>
-                        Hello! We have received your escrow payment successfully. Our remote development team has started working on the initial layout. Please review the attached wireframe design and let us know if you have any feedback before we proceed with coding.
-                    </div>
-                    <a href="#" class="attachment">📄 wireframes_v1.pdf</a>
-                </div>
+    <section id="projects" class="view hidden"><div class="card panel"><div class="panel-head"><div><h2>Projects & scoped access</h2><p>Each member sees only assigned workstreams or tasks.</p></div><button class="btn primary">Assign work</button></div><div class="project"><div class="project-top"><div><h3>Quiz & Rise Magazine Subscription</h3><div class="meta">4 workstreams · 6 assigned members</div></div><span class="badge cyan">In development</span></div><div class="progress"><span style="width:54%"></span></div><div class="workstreams"><div class="workstream"><div class="ws-top"><h4>Subscription UX</h4><span class="badge cyan">Assigned</span></div><div class="assignee"><span class="mini-avatar">OA</span> Omar only</div></div><div class="workstream"><div class="ws-top"><h4>Stripe Integration</h4><span class="badge amber">Manager review</span></div><div class="assignee"><span class="mini-avatar">AK</span> Amina only</div></div><div class="workstream"><div class="ws-top"><h4>Editorial Assets</h4><span class="badge green">Approved</span></div><div class="assignee"><span class="mini-avatar">SK</span> Sara only</div></div><div class="workstream"><div class="ws-top"><h4>Email Automation</h4><span class="badge cyan">In progress</span></div><div class="assignee"><span class="mini-avatar">RH</span> Rania only</div></div></div></div></div></section>
 
-                <!-- پیام مشتری -->
-                <div class="msg-box msg-client">
-                    <div class="msg-header">
-                        <strong style="color: #fff;">You</strong>
-                        <span>Today, 11:15 AM</span>
-                    </div>
-                    <div>
-                        The wireframes look great! I have added a small logo file that I want to be placed in the header. Please proceed with the development.
-                    </div>
-                    <a href="#" class="attachment">🖼️ new_logo.png</a>
-                </div>
-            </div>
+    <section id="review" class="view hidden"><div class="grid"><div class="card panel"><div class="panel-head"><div><h2>Manager review workflow</h2><p>Nothing reaches the client without approval.</p></div><span class="badge amber">Controlled release</span></div><div class="activity"><span class="mini-avatar">1</span><div><strong>Team member submits completion report</strong><small>Files, scope completed, limitations and preview link.</small></div></div><div class="activity"><span class="mini-avatar">2</span><div><strong>Manager reviews and validates</strong><small>Approve, reject or request changes.</small></div></div><div class="activity"><span class="mini-avatar">3</span><div><strong>Approved work is locked</strong><small>Marked as official and moved to delivery package.</small></div></div><div class="activity"><span class="mini-avatar">4</span><div><strong>Manager releases to client</strong><small>Only approved files and messages become visible.</small></div></div></div><div class="card panel"><div class="panel-head"><div><h3>Submitted report</h3><p>Landing Page · Omar A.</p></div><span class="badge amber">Awaiting review</span></div><p class="meta">Completed responsive layout, mobile navigation and accessibility checks. Preview tested on iPhone 14 Pro Max and desktop. No known blocking issue.</p><div class="queue-actions"><button class="btn primary">Approve work</button><button class="btn">Request changes</button><button class="btn danger">Reject</button></div></div></div></section>
 
-            <!-- ارسال آپدیت جدید توسط مشتری -->
-            <div class="input-area">
-                <textarea placeholder="Write a message, provide feedback, or share links..."></textarea>
-                <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                    <button class="btn btn-outline">📎 Attach File</button>
-                    <button class="btn btn-primary">Post Update</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <section id="messages" class="view hidden"><div class="card chat-layout"><aside class="thread-list"><div class="panel-head"><h3>Conversations</h3></div><div class="thread active"><strong>MealDen Campaign</strong><small>Client + approved team member</small></div><div class="thread"><strong>Magazine Subscription</strong><small>Manager only</small></div><div class="thread"><strong>Digital Den Website</strong><small>Client communication paused</small></div></aside><div class="chat"><div class="chat-head"><div><strong>MealDen Campaign</strong><div class="meta">Direct chat enabled by manager · monitored</div></div><span class="badge green">Live & supervised</span></div><div class="messages"><div class="bubble"><strong>Client</strong><br>Please share the latest mobile preview when ready.<small>10:12</small></div><div class="bubble me"><strong>Assigned team member</strong><br>The manager has approved the preview. You can review it inside the Files tab.<small>10:18</small></div><div class="bubble flagged"><strong>Assigned team member</strong><br>We can continue this conversation on WhatsApp. Here is my personal link…<span class="flag">BLOCKED · External contact invitation detected</span><small>Held for manager review · 10:19</small></div></div><div class="composer"><textarea id="chat-input" placeholder="Write a monitored message…"></textarea><button class="btn primary" id="send-btn">Send</button></div></div></div></section>
+
+    <section id="security" class="view hidden"><div class="grid"><div class="card panel"><div class="panel-head"><div><h2>Communication permissions</h2><p>Manager controls who can speak directly with each client.</p></div><span class="badge green">Policy active</span></div><div class="toggle-row"><div><strong>Allow assigned member to chat with client</strong><small>Applies only to the selected project or workstream.</small></div><button class="switch on" aria-label="toggle"></button></div><div class="toggle-row"><div><strong>Manager visibility on all messages</strong><small>Manager can read, audit and intervene at any time.</small></div><button class="switch on" aria-label="toggle"></button></div><div class="toggle-row"><div><strong>Require approval for links</strong><small>External URLs are held before delivery.</small></div><button class="switch on" aria-label="toggle"></button></div><div class="toggle-row"><div><strong>Block off-platform invitations</strong><small>Phone numbers, emails, WhatsApp, Telegram and meeting invitations are blocked.</small></div><button class="switch on" aria-label="toggle"></button></div><div class="toggle-row"><div><strong>Allow file attachments</strong><small>Only approved file types and scanned uploads.</small></div><button class="switch on" aria-label="toggle"></button></div></div><div class="card panel"><div class="panel-head"><div><h3>Moderation rules</h3><p>Prototype policy checks for every outgoing message.</p></div></div><div class="rule"><span>External URL</span><code>HOLD_FOR_REVIEW</code></div><div class="rule"><span>Email or phone number</span><code>BLOCK_AND_FLAG</code></div><div class="rule"><span>WhatsApp / Telegram invitation</span><code>BLOCK_AND_FLAG</code></div><div class="rule"><span>Payment request outside platform</span><code>BLOCK_AND_ESCALATE</code></div><div class="rule"><span>Suspicious attachment</span><code>QUARANTINE</code></div><div class="rule"><span>Repeated policy breach</span><code>SUSPEND_CHAT_ACCESS</code></div><div class="security-box"><h4>Backend requirement</h4><p>These rules must be enforced server-side. Hiding controls in the interface alone is not secure.</p></div></div></div></section>
+  </div>
+</main>
+</div>
+<nav class="mobile-nav"><button class="active" data-view="overview">Home</button><button data-view="projects">Projects</button><button data-view="review">Review</button><button data-view="messages">Chat</button><button data-view="security">Control</button></nav>
+<script>
+const views=[...document.querySelectorAll('.view')],nav=[...document.querySelectorAll('[data-view]')];
+function showView(id){views.forEach(v=>v.classList.toggle('hidden',v.id!==id));nav.forEach(n=>n.classList.toggle('active',n.dataset.view===id));document.getElementById('page-title').textContent={overview:'Manager Workspace',projects:'Projects & Access',review:'Review & Delivery',messages:'Monitored Messages',security:'Communication Control'}[id]||'Workspace';}
+nav.forEach(n=>n.addEventListener('click',()=>showView(n.dataset.view)));
+document.querySelectorAll('.switch').forEach(s=>s.addEventListener('click',()=>s.classList.toggle('on')));
+const roles=[...document.querySelectorAll('[data-role]')];roles.forEach(btn=>btn.addEventListener('click',()=>{roles.forEach(b=>b.classList.remove('active'));btn.classList.add('active');const role=btn.dataset.role;document.getElementById('page-title').textContent=role==='manager'?'Manager Workspace':role==='member'?'My Assigned Work':'Client Portal';document.getElementById('page-subtitle').textContent=role==='manager'?'Control projects, team assignments, reviews and client delivery.':role==='member'?'Only your assigned workstreams, tasks and approved conversations are visible.':'Track approved progress, messages, files and deliveries.';}));
+const blocked=/(https?:\/\/|www\.|whatsapp|telegram|@|\+?\d[\d\s-]{7,})/i;document.getElementById('send-btn').addEventListener('click',()=>{const input=document.getElementById('chat-input'),text=input.value.trim();if(!text)return;if(blocked.test(text)){alert('Message blocked: external contact details or links require manager approval.');return;}const bubble=document.createElement('div');bubble.className='bubble me';bubble.innerHTML='<strong>You</strong><br>'+text.replace(/[<>]/g,'')+'<small>Just now · monitored</small>';document.querySelector('.messages').appendChild(bubble);input.value='';});
+</script>
 </body>
 </html>
