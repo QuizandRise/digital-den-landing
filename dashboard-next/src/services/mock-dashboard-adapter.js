@@ -5,9 +5,9 @@ import {
   messages,
   files,
   clients,
-  team,
+  teamMembers,
   auditEvents,
-  communicationPolicies,
+  communicationPolicy,
 } from "../mock-data.js";
 import { assertReadOnlyAdapter } from "./adapter-contract.js";
 
@@ -33,8 +33,8 @@ export function createMockDashboardAdapter() {
     async getMessages() { return clone(messages); },
     async getFiles() { return clone(files); },
     async getClients() { return clone(clients); },
-    async getTeam() { return clone(team); },
+    async getTeam() { return clone(teamMembers); },
     async getAuditEvents() { return clone(auditEvents); },
-    async getCommunicationPolicies() { return clone(communicationPolicies); },
+    async getCommunicationPolicies() { return clone(communicationPolicy); },
   });
 }
