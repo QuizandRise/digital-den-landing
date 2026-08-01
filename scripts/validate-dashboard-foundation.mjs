@@ -12,6 +12,10 @@ const requiredFiles = [
   "dashboard-next/src/config.js",
   "dashboard-next/src/mock-data.js",
   "dashboard-next/src/app.js",
+  "dashboard-next/src/services/adapter-contract.js",
+  "dashboard-next/src/services/dashboard-service.js",
+  "dashboard-next/src/services/mock-dashboard-adapter.js",
+  "dashboard-next/src/services/staging-http-adapter.js",
 ];
 
 const failures = [];
@@ -26,6 +30,10 @@ if (failures.length === 0) {
   const nextHtml = await readFile("dashboard-next/index.html", "utf8");
   const config = await readFile("dashboard-next/src/config.js", "utf8");
   const app = await readFile("dashboard-next/src/app.js", "utf8");
+  const adapterContract = await readFile("dashboard-next/src/services/adapter-contract.js", "utf8");
+  const dashboardService = await readFile("dashboard-next/src/services/dashboard-service.js", "utf8");
+  const mockAdapter = await readFile("dashboard-next/src/services/mock-dashboard-adapter.js", "utf8");
+  const stagingAdapter = await readFile("dashboard-next/src/services/staging-http-adapter.js", "utf8");
 
   const legacyChecks = [
     [/<html\b/i, "dashboard.html must contain an <html> element"],
@@ -61,6 +69,14 @@ if (failures.length === 0) {
     [config, /client:\s*\[/, "client route policy is missing"],
     [app, /ROUTE_POLICY\[state\.role\]/, "application must render navigation from route policy"],
     [app, /FEATURE_FLAGS\.liveApi/, "application must expose live API state"],
+    [adapterContract, /forbiddenWriteMethods/, "adapter contract must reject write methods"],
+    [adapterContract, /getCommunicationPolicies/, "adapter contract is incomplete"],
+    [dashboardService, /FEATURE_FLAGS\.liveApi/, "service selector must remain feature-flag controlled"],
+    [dashboardService, /createMockDashboardAdapter/, "mock adapter fallback is missing"],
+    [mockAdapter, /assertReadOnlyAdapter/, "mock adapter must use read-only guard"],
+    [stagingAdapter, /method:\s*["']GET["']/, "staging adapter must use GET only"],
+    [stagingAdapter, /credentials:\s*["']include["']/, "staging adapter must require authenticated session credentials"],
+    [stagingAdapter, /cache:\s*["']no-store["']/, "staging adapter must disable response caching"],
   ];
   for (const [source, pattern, message] of structuredChecks) if (!pattern.test(source)) failures.push(message);
 
@@ -70,8 +86,9 @@ if (failures.length === 0) {
     [/mongodb(?:\+srv)?:\/\/[^\s"']+:[^\s"']+@/i, "MongoDB credential URI detected"],
     [/postgres(?:ql)?:\/\/[^\s"']+:[^\s"']+@/i, "PostgreSQL credential URI detected"],
   ];
+  const scannedSources = [legacyHtml, contracts, nextHtml, config, app, adapterContract, dashboardService, mockAdapter, stagingAdapter];
   for (const [pattern, message] of forbiddenPatterns) {
-    if ([legacyHtml, contracts, nextHtml, config, app].some(source => pattern.test(source))) failures.push(message);
+    if (scannedSources.some(source => pattern.test(source))) failures.push(message);
   }
 }
 
