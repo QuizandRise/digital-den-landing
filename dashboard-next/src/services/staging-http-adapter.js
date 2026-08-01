@@ -1,13 +1,10 @@
+import { API_CONFIG } from "../config.js";
 import { assertReadOnlyAdapter } from "./adapter-contract.js";
 
 const DEFAULT_TIMEOUT_MS = 8000;
 
 function getStagingBaseUrl() {
-  const value = globalThis.DIGITAL_DEN_STAGING_API_BASE_URL;
-  if (!value || typeof value !== "string") {
-    throw new Error("Digital Den staging API base URL is not configured");
-  }
-  return value.replace(/\/$/, "");
+  return API_CONFIG.baseUrl.replace(/\/$/, "");
 }
 
 async function requestJson(path, { signal } = {}) {
@@ -21,38 +18,39 @@ async function requestJson(path, { signal } = {}) {
       credentials: "include",
       headers: {
         Accept: "application/json",
-        "X-Digital-Den-Contract-Version": "2026-08-01.v1",
+        "X-Digital-Den-Contract-Version": API_CONFIG.contractVersion,
       },
       signal: combinedSignal,
       cache: "no-store",
     });
 
+    const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const correlationId = response.headers.get("x-correlation-id") ?? "unavailable";
-      throw new Error(`Read-only staging request failed (${response.status}); correlationId=${correlationId}`);
+      const correlationId = response.headers.get("x-correlation-id") ?? payload?.error?.correlationId ?? "unavailable";
+      const message = payload?.error?.message ?? `Read-only staging request failed (${response.status})`;
+      throw new Error(`${message}; correlationId=${correlationId}`);
     }
 
-    return response.json();
+    return payload;
   } finally {
     clearTimeout(timeout);
   }
 }
 
-/**
- * Disabled-by-default staging adapter. It exposes GET operations only and
- * requires a same-session authenticated staging endpoint when activated.
- */
 export function createStagingHttpAdapter() {
   return assertReadOnlyAdapter({
-    getActor: role => requestJson(`/dashboard/v1/actor?previewRole=${encodeURIComponent(role)}`),
-    getOverview: role => requestJson(`/dashboard/v1/overview?role=${encodeURIComponent(role)}`),
-    getProjects: () => requestJson("/dashboard/v1/projects"),
-    getReviews: () => requestJson("/dashboard/v1/reviews"),
-    getMessages: () => requestJson("/dashboard/v1/messages"),
-    getFiles: () => requestJson("/dashboard/v1/files"),
-    getClients: () => requestJson("/dashboard/v1/clients"),
-    getTeam: () => requestJson("/dashboard/v1/team"),
-    getAuditEvents: () => requestJson("/dashboard/v1/audit"),
-    getCommunicationPolicies: () => requestJson("/dashboard/v1/communication-policies"),
+    async getActor() {
+      const payload = await requestJson("/api/digital-den/session");
+      return payload.actor;
+    },
+    getOverview: () => requestJson("/api/digital-den/overview"),
+    getProjects: () => requestJson("/api/digital-den/projects"),
+    getReviews: () => requestJson("/api/digital-den/reviews"),
+    getMessages: () => requestJson("/api/digital-den/messages"),
+    getFiles: () => requestJson("/api/digital-den/files"),
+    getClients: () => requestJson("/api/digital-den/clients"),
+    getTeam: () => requestJson("/api/digital-den/team"),
+    getAuditEvents: () => requestJson("/api/digital-den/audit"),
+    getCommunicationPolicies: () => requestJson("/api/digital-den/communication-policies"),
   });
 }
