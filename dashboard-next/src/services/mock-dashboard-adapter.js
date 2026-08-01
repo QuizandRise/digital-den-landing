@@ -9,7 +9,7 @@ import {
   auditEvents,
   communicationPolicies,
 } from "../mock-data.js";
-import { assertReadOnlyAdapter } from "./dashboard-service.js";
+import { assertReadOnlyAdapter } from "./adapter-contract.js";
 
 const clone = value => structuredClone(value);
 
