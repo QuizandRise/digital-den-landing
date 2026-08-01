@@ -3,6 +3,8 @@ import { constants } from "node:fs";
 
 const requiredFiles = [
   "dashboard.html",
+  "workspace-access.html",
+  "workspace-access.js",
   "src/contracts/digital-den.ts",
   "docs/digital-den/DIGITAL_DEN_DASHBOARD_COMPLETION_AUDIT_V1.md",
   "docs/digital-den/DIGITAL_DEN_DASHBOARD_COMPLETION_ROADMAP_V1.md",
@@ -27,6 +29,8 @@ for (const file of requiredFiles) {
 
 if (failures.length === 0) {
   const legacyHtml = await readFile("dashboard.html", "utf8");
+  const accessHtml = await readFile("workspace-access.html", "utf8");
+  const accessJs = await readFile("workspace-access.js", "utf8");
   const contracts = await readFile("src/contracts/digital-den.ts", "utf8");
   const nextHtml = await readFile("dashboard-next/index.html", "utf8");
   const config = await readFile("dashboard-next/src/config.js", "utf8");
@@ -66,6 +70,7 @@ if (failures.length === 0) {
     [config, /projectMutations:\s*false/, "project mutations must remain disabled"],
     [config, /messagingMutations:\s*false/, "messaging mutations must remain disabled"],
     [config, /billing:\s*false/, "billing integration must remain disabled"],
+    [config, /baseUrl:\s*["']https:\/\/digital-den-api\.vercel\.app["']/, "Digital Den API base URL is missing"],
     [config, /manager:\s*\[/, "manager route policy is missing"],
     [config, /team_member:\s*\[/, "team-member route policy is missing"],
     [config, /client:\s*\[/, "client route policy is missing"],
@@ -86,17 +91,25 @@ if (failures.length === 0) {
     [stagingAdapter, /method:\s*["']GET["']/, "staging adapter must use GET only"],
     [stagingAdapter, /credentials:\s*["']include["']/, "staging adapter must require authenticated session credentials"],
     [stagingAdapter, /cache:\s*["']no-store["']/, "staging adapter must disable response caching"],
+    [stagingAdapter, /\/api\/digital-den\/session/, "staging adapter session route is missing"],
+    [stagingAdapter, /\/api\/digital-den\/projects/, "staging adapter project route is missing"],
     [sessionContract, /secure-http-only-cookie/, "session transport must require a secure HTTP-only cookie"],
     [sessionContract, /localStorageAllowed:\s*false/, "session tokens must not be stored in localStorage"],
     [sessionContract, /queryStringTokenAllowed:\s*false/, "session tokens must not be accepted from query strings"],
     [sessionContract, /serverSideRoleEnforcementRequired:\s*true/, "server-side role enforcement must be required"],
     [sessionContract, /serverSideProjectScopeEnforcementRequired:\s*true/, "server-side project-scope enforcement must be required"],
+    [accessHtml, /noindex,nofollow/i, "workspace access page must be noindex,nofollow"],
+    [accessHtml, /workspace-access\.js/, "workspace access module is missing"],
+    [accessJs, /location\.hash\.slice\(1\)/, "access token must be read from URL fragment"],
+    [accessJs, /history\.replaceState/, "access fragment must be removed immediately"],
+    [accessJs, /credentials:\s*["']include["']/, "workspace access requests must include session credentials"],
+    [accessJs, /\/api\/digital-den\/access\/request/, "access request endpoint is missing"],
+    [accessJs, /\/api\/digital-den\/access\/consume/, "access consume endpoint is missing"],
   ];
   for (const [source, pattern, message] of structuredChecks) if (!pattern.test(source)) failures.push(message);
 
-  if (/from\s+["'].\/mock-data\.js["']/.test(app)) {
-    failures.push("application must not import mock data directly");
-  }
+  if (/from\s+["'].\/mock-data\.js["']/.test(app)) failures.push("application must not import mock data directly");
+  if (/\?token=/.test(accessJs) || /localStorage/.test(accessJs)) failures.push("workspace access must not use query-string or localStorage tokens");
 
   const forbiddenPatterns = [
     [/sk_live_[A-Za-z0-9]+/, "Possible live Stripe secret detected"],
@@ -104,7 +117,7 @@ if (failures.length === 0) {
     [/mongodb(?:\+srv)?:\/\/[^\s"']+:[^\s"']+@/i, "MongoDB credential URI detected"],
     [/postgres(?:ql)?:\/\/[^\s"']+:[^\s"']+@/i, "PostgreSQL credential URI detected"],
   ];
-  const scannedSources = [legacyHtml, contracts, nextHtml, config, app, adapterContract, dashboardService, mockAdapter, stagingAdapter, sessionContract];
+  const scannedSources = [legacyHtml, accessHtml, accessJs, contracts, nextHtml, config, app, adapterContract, dashboardService, mockAdapter, stagingAdapter, sessionContract];
   for (const [pattern, message] of forbiddenPatterns) {
     if (scannedSources.some(source => pattern.test(source))) failures.push(message);
   }
