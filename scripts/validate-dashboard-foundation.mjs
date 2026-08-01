@@ -16,6 +16,7 @@ const requiredFiles = [
   "dashboard-next/src/services/dashboard-service.js",
   "dashboard-next/src/services/mock-dashboard-adapter.js",
   "dashboard-next/src/services/staging-http-adapter.js",
+  "dashboard-next/src/session/session-contract.js",
 ];
 
 const failures = [];
@@ -34,6 +35,7 @@ if (failures.length === 0) {
   const dashboardService = await readFile("dashboard-next/src/services/dashboard-service.js", "utf8");
   const mockAdapter = await readFile("dashboard-next/src/services/mock-dashboard-adapter.js", "utf8");
   const stagingAdapter = await readFile("dashboard-next/src/services/staging-http-adapter.js", "utf8");
+  const sessionContract = await readFile("dashboard-next/src/session/session-contract.js", "utf8");
 
   const legacyChecks = [
     [/<html\b/i, "dashboard.html must contain an <html> element"],
@@ -67,6 +69,11 @@ if (failures.length === 0) {
     [config, /manager:\s*\[/, "manager route policy is missing"],
     [config, /team_member:\s*\[/, "team-member route policy is missing"],
     [config, /client:\s*\[/, "client route policy is missing"],
+    [app, /createDashboardService/, "application must consume the dashboard service boundary"],
+    [app, /service\.getActor/, "application must load actors through the service"],
+    [app, /Promise\.all/, "application must load read-only workspace data through the adapter"],
+    [app, /state\.loading/, "application loading state is missing"],
+    [app, /state\.error/, "application error state is missing"],
     [app, /ROUTE_POLICY\[state\.role\]/, "application must render navigation from route policy"],
     [app, /FEATURE_FLAGS\.liveApi/, "application must expose live API state"],
     [adapterContract, /forbiddenWriteMethods/, "adapter contract must reject write methods"],
@@ -74,11 +81,22 @@ if (failures.length === 0) {
     [dashboardService, /FEATURE_FLAGS\.liveApi/, "service selector must remain feature-flag controlled"],
     [dashboardService, /createMockDashboardAdapter/, "mock adapter fallback is missing"],
     [mockAdapter, /assertReadOnlyAdapter/, "mock adapter must use read-only guard"],
+    [mockAdapter, /teamMembers/, "mock adapter team binding is invalid"],
+    [mockAdapter, /communicationPolicy/, "mock adapter policy binding is invalid"],
     [stagingAdapter, /method:\s*["']GET["']/, "staging adapter must use GET only"],
     [stagingAdapter, /credentials:\s*["']include["']/, "staging adapter must require authenticated session credentials"],
     [stagingAdapter, /cache:\s*["']no-store["']/, "staging adapter must disable response caching"],
+    [sessionContract, /secure-http-only-cookie/, "session transport must require a secure HTTP-only cookie"],
+    [sessionContract, /localStorageAllowed:\s*false/, "session tokens must not be stored in localStorage"],
+    [sessionContract, /queryStringTokenAllowed:\s*false/, "session tokens must not be accepted from query strings"],
+    [sessionContract, /serverSideRoleEnforcementRequired:\s*true/, "server-side role enforcement must be required"],
+    [sessionContract, /serverSideProjectScopeEnforcementRequired:\s*true/, "server-side project-scope enforcement must be required"],
   ];
   for (const [source, pattern, message] of structuredChecks) if (!pattern.test(source)) failures.push(message);
+
+  if (/from\s+["'].\/mock-data\.js["']/.test(app)) {
+    failures.push("application must not import mock data directly");
+  }
 
   const forbiddenPatterns = [
     [/sk_live_[A-Za-z0-9]+/, "Possible live Stripe secret detected"],
@@ -86,7 +104,7 @@ if (failures.length === 0) {
     [/mongodb(?:\+srv)?:\/\/[^\s"']+:[^\s"']+@/i, "MongoDB credential URI detected"],
     [/postgres(?:ql)?:\/\/[^\s"']+:[^\s"']+@/i, "PostgreSQL credential URI detected"],
   ];
-  const scannedSources = [legacyHtml, contracts, nextHtml, config, app, adapterContract, dashboardService, mockAdapter, stagingAdapter];
+  const scannedSources = [legacyHtml, contracts, nextHtml, config, app, adapterContract, dashboardService, mockAdapter, stagingAdapter, sessionContract];
   for (const [pattern, message] of forbiddenPatterns) {
     if (scannedSources.some(source => pattern.test(source))) failures.push(message);
   }
