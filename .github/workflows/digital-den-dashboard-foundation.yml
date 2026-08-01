@@ -4,8 +4,10 @@ on:
   pull_request:
     paths:
       - "dashboard.html"
+      - "dashboard-next/**"
       - "src/contracts/**"
       - "scripts/validate-dashboard-foundation.mjs"
+      - "scripts/test-digital-den-role-isolation.mjs"
       - "docs/digital-den/**"
       - ".github/workflows/digital-den-dashboard-foundation.yml"
   push:
@@ -14,8 +16,10 @@ on:
       - feature/client-dashboard-v2
     paths:
       - "dashboard.html"
+      - "dashboard-next/**"
       - "src/contracts/**"
       - "scripts/validate-dashboard-foundation.mjs"
+      - "scripts/test-digital-den-role-isolation.mjs"
       - "docs/digital-den/**"
       - ".github/workflows/digital-den-dashboard-foundation.yml"
 
@@ -41,3 +45,6 @@ jobs:
 
       - name: Validate dashboard foundation
         run: node scripts/validate-dashboard-foundation.mjs
+
+      - name: Test role isolation foundation
+        run: node scripts/test-digital-den-role-isolation.mjs
