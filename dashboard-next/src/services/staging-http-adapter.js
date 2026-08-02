@@ -159,7 +159,7 @@ export function createStagingHttpAdapter() {
         intent: "team-administration",
         body: input,
       });
-      return mapTeamMember(payload.teamMember);
+      return { member: mapTeamMember(payload.teamMember), invitationSent: Boolean(payload.invitationSent) };
     },
     async updateTeamMember(input) {
       const payload = await requestJson("/api/digital-den/team/manage", {
@@ -167,7 +167,15 @@ export function createStagingHttpAdapter() {
         intent: "team-administration",
         body: input,
       });
-      return mapTeamMember(payload.teamMember);
+      return { member: mapTeamMember(payload.teamMember), invitationSent: Boolean(payload.invitationSent) };
+    },
+    async resendTeamInvitation(userId) {
+      const payload = await requestJson("/api/digital-den/team/manage", {
+        method: "PATCH",
+        intent: "team-administration",
+        body: { userId, action: "resend_invitation" },
+      });
+      return { member: mapTeamMember(payload.teamMember), invitationSent: Boolean(payload.invitationSent) };
     },
     async getAuditEvents(role) {
       if (role !== "manager") return [];
