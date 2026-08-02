@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07090d">
   <meta name="robots" content="noindex,nofollow">
-  <title>Digital Den Workspace — Structured Preview</title>
+  <title>Digital Den Client Workspace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
@@ -13,21 +13,21 @@
   <link rel="stylesheet" href="./assets/authenticated-overrides.css">
 </head>
 <body>
-  <div id="app" class="app-shell" data-environment="preview">
+  <div id="app" class="app-shell" data-environment="production">
     <aside class="sidebar" aria-label="Primary navigation">
       <a class="brand" href="#overview" aria-label="Digital Den workspace home">
         <span class="brand-mark" aria-hidden="true">DD</span>
-        <span><strong>Digital Den</strong><small>Structured workspace</small></span>
+        <span><strong>Digital Den</strong><small>Client workspace</small></span>
       </a>
       <div class="preview-banner" role="status">
-        <strong>Preview only</strong>
-        <span>No production actions are enabled.</span>
+        <strong>Secure workspace</strong>
+        <span>Your project information is scoped to your verified account.</span>
       </div>
       <nav id="primary-nav" class="nav-list"></nav>
       <div class="sidebar-footer">
         <div class="identity-card">
-          <span id="actor-avatar" class="avatar">AM</span>
-          <span><strong id="actor-name">Abdul Hamid</strong><small id="actor-role">Manager preview</small></span>
+          <span id="actor-avatar" class="avatar">DD</span>
+          <span><strong id="actor-name">Client</strong><small id="actor-role">Authenticated workspace</small></span>
         </div>
       </div>
     </aside>
@@ -41,20 +41,20 @@
         </a>
         <label class="search-box">
           <span class="sr-only">Search projects</span>
-          <input id="global-search" type="search" placeholder="Search projects, clients or workstreams…" autocomplete="off">
+          <input id="global-search" type="search" placeholder="Search your projects…" autocomplete="off">
         </label>
         <div class="topbar-actions">
-          <span id="environment-pill" class="pill neutral">Preview</span>
+          <span id="environment-pill" class="pill neutral">Client Workspace</span>
           <button class="button secondary" type="button" disabled title="Notifications will be connected in a later phase">Notifications</button>
-          <button class="button primary" type="button" disabled title="Project creation is disabled in preview">New project</button>
+          <button class="button primary" type="button" disabled title="New project requests are submitted through the Digital Den project brief">New project</button>
         </div>
       </header>
 
       <section class="workspace-heading">
         <div>
-          <p class="eyebrow">Digital Den operations</p>
-          <h1 id="view-title">Workspace overview</h1>
-          <p id="view-description">Role-scoped project delivery visibility.</p>
+          <p class="eyebrow">Digital Den client workspace</p>
+          <h1 id="view-title">Overview</h1>
+          <p id="view-description">Secure access to your projects, messages, files and billing status.</p>
         </div>
         <div class="role-preview" aria-label="Preview role selector">
           <span>Preview as</span>
