@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/digital-den/:path*",
-      "destination": "https://digital-den-api-git-agent-digital-den-readonl-ea191c-quiz-rise1.vercel.app/api/digital-den/:path*"
+      "destination": "https://digital-den-api.vercel.app/api/digital-den/:path*"
     }
   ]
 }
