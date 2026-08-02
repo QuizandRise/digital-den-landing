@@ -1,0 +1,8 @@
+.authenticated-workspace .role-preview,
+.role-preview[hidden] {
+  display: none !important;
+}
+
+.authenticated-workspace .preview-banner {
+  display: none !important;
+}
