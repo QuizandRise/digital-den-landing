@@ -1,0 +1,189 @@
+import { FEATURE_FLAGS, ROUTE_POLICY, NAVIGATION } from "./config.js";
+import { createDashboardService } from "./services/dashboard-service.js";
+
+const service = createDashboardService();
+const state = {
+  role: FEATURE_FLAGS.authentication ? "client" : "manager",
+  view: location.hash.slice(1) || "overview",
+  query: "",
+  loading: true,
+  error: null,
+  actor: null,
+  overview: null,
+  projects: [],
+  reviews: [],
+  messages: [],
+  files: [],
+  clients: [],
+  teamMembers: [],
+  auditEvents: [],
+  communicationPolicy: [],
+};
+
+const app = document.querySelector("#app");
+const nav = document.querySelector("#primary-nav");
+const content = document.querySelector("#workspace-content");
+const title = document.querySelector("#view-title");
+const description = document.querySelector("#view-description");
+const search = document.querySelector("#global-search");
+const rolePreview = document.querySelector(".role-preview");
+const environmentPill = document.querySelector("#environment-pill");
+
+const descriptions = {
+  overview:"Role-scoped project delivery visibility.", projects:"Projects visible within the current actor scope.",
+  review:"Manager-controlled approval queue.", messages:"Authorised project conversations.", communication_control:"Communication policy, moderation rules and flagged-item visibility.",
+  clients:"Client relationships, project load and recent activity.", team:"Team capacity and assignment visibility.", audit:"Read-only operational history.",
+  assigned_work:"Workstreams assigned to this team member.", files:"Scanned project files available to this role.", billing:"Payment-state placeholder for future central integration.",
+};
+
+const label = key => NAVIGATION[key]?.[1] ?? key.replaceAll("_", " ");
+const badge = status => {
+  const value=String(status).toLowerCase();
+  const tone=value.includes("flag")||value.includes("high")?"red":value.includes("review")||value.includes("pending")||value.includes("capacity")?"amber":value.includes("ready")||value.includes("available")||value.includes("clear")||value.includes("clean")||value.includes("delivered")?"green":"cyan";
+  return `<span class="badge ${tone}">${String(status).replaceAll("_", " ")}</span>`;
+};
+
+function loadingState(message="Loading workspace data…") {
+  return `<section class="card panel"><div class="empty-state"><strong>${message}</strong><span>Secure read-only workspace is initialising.</span></div></section>`;
+}
+
+function errorState() {
+  return `<section class="card panel"><div class="empty-state"><strong>Workspace data could not be loaded</strong><span>${state.error?.message ?? "Unknown read-only adapter error."}</span></div></section>`;
+}
+
+function setIdentity(actor) {
+  if (!actor) return;
+  document.querySelector("#actor-name").textContent = actor.name;
+  document.querySelector("#actor-avatar").textContent = actor.initials;
+  document.querySelector("#actor-role").textContent = actor.label;
+}
+
+async function loadRoleData(role, actorOverride = null) {
+  state.loading = true;
+  state.error = null;
+  render();
+  try {
+    const actorPromise = actorOverride ? Promise.resolve(actorOverride) : service.getActor(role);
+    const [actor, overview, projects, reviews, messages, files, clients, teamMembers, auditEvents, communicationPolicy] = await Promise.all([
+      actorPromise,
+      service.getOverview(role),
+      service.getProjects(role),
+      service.getReviews(role),
+      service.getMessages(role),
+      service.getFiles(role),
+      service.getClients(role),
+      service.getTeam(role),
+      service.getAuditEvents(role),
+      service.getCommunicationPolicies(role),
+    ]);
+    Object.assign(state, { actor, overview, projects, reviews, messages, files, clients, teamMembers, auditEvents, communicationPolicy });
+    setIdentity(actor);
+  } catch (error) {
+    state.error = error instanceof Error ? error : new Error("Unknown adapter error");
+  } finally {
+    state.loading = false;
+    render();
+  }
+}
+
+async function setRole(role){
+  if(!ROUTE_POLICY[role]) return;
+  if(FEATURE_FLAGS.authentication && state.actor && role !== state.actor.role) return;
+  state.role=role;
+  const allowed=ROUTE_POLICY[role];
+  if(!allowed.includes(state.view)) state.view="overview";
+  document.querySelectorAll("[data-role]").forEach(button=>button.classList.toggle("active",button.dataset.role===role));
+  history.replaceState(null,"",`#${state.view}`);
+  await loadRoleData(role);
+}
+
+function renderNav(){
+  nav.innerHTML=ROUTE_POLICY[state.role].map(key=>`<a class="nav-link ${state.view===key?"active":""}" href="#${key}" data-view="${key}"><span aria-hidden="true">${NAVIGATION[key][0]}</span><span>${NAVIGATION[key][1]}</span></a>`).join("");
+}
+
+function visibleProjects(){
+  const q=state.query.trim().toLowerCase();
+  if(!q) return state.projects;
+  return state.projects.filter(project=>[project.id,project.title,project.client,project.service].some(value=>String(value).toLowerCase().includes(q)));
+}
+
+function projectCards(){
+  const list=visibleProjects();
+  if(!list.length) return `<div class="empty-state"><strong>No projects are available</strong><span>No project in this authenticated scope matches the current view.</span></div>`;
+  return list.map(project=>`<article class="project-card"><div class="project-head"><div><h3>${project.title}</h3><div class="meta">${project.id} · ${project.service}</div></div>${badge(project.status)}</div><div class="progress" aria-label="${project.progress}% complete"><span style="width:${project.progress}%"></span></div><div class="meta">${project.progress}% complete · Updated ${project.updated}</div></article>`).join("");
+}
+
+function overview(){
+  const readyCount = state.projects.filter(x=>["ready_for_delivery","delivered"].includes(x.status)).length;
+  if(state.role === "client") {
+    return `<div class="stats-grid"><div class="card stat-card"><small>Your projects</small><strong>${state.projects.length}</strong><em>Securely scoped</em></div><div class="card stat-card"><small>Project messages</small><strong>${state.messages.length}</strong><em>Read-only visibility</em></div><div class="card stat-card"><small>Available files</small><strong>${state.files.length}</strong><em>Project scoped</em></div><div class="card stat-card"><small>Ready to deliver</small><strong>${readyCount}</strong><em>Delivery status</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Your Digital Den projects</h2><p>Only projects linked to your verified email are visible.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>Secure access</h2><p>Authenticated client workspace.</p></div></div><div class="list"><div class="list-row"><span><strong>Live project data</strong><small>Read from Digital Den API</small></span><span class="pill neutral">On</span></div><div class="list-row"><span><strong>Client session</strong><small>HTTP-only secure session</small></span><span class="pill neutral">Active</span></div><div class="list-row"><span><strong>Write operations</strong><small>Updates and payments</small></span><span class="pill neutral">Off</span></div></div><div class="notice" style="margin-top:14px">This staging workspace can read your project record but cannot modify it.</div></aside></div>`;
+  }
+
+  const flagged = state.overview?.flaggedMessageCount ?? 0;
+  return `<div class="stats-grid"><div class="card stat-card"><small>Visible projects</small><strong>${state.projects.length}</strong><em>Role scoped</em></div><div class="card stat-card"><small>Awaiting review</small><strong>${state.role==="manager"?state.reviews.length:"—"}</strong><em>${state.role==="manager"?"Manager action required":"Not in this role"}</em></div><div class="card stat-card"><small>Ready to deliver</small><strong>${readyCount}</strong><em>All checks passed</em></div><div class="card stat-card"><small>Flagged messages</small><strong>${state.role==="manager"?flagged:"—"}</strong><em>Policy controlled</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Current projects</h2><p>Read through the isolated dashboard service.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>System state</h2><p>Production capabilities remain disabled.</p></div></div><div class="list"><div class="list-row"><span><strong>Live API</strong><small>External data connection</small></span><span class="pill neutral">${FEATURE_FLAGS.liveApi?"On":"Off"}</span></div><div class="list-row"><span><strong>Authentication</strong><small>Real session enforcement</small></span><span class="pill neutral">${FEATURE_FLAGS.authentication?"On":"Off"}</span></div><div class="list-row"><span><strong>Mutations</strong><small>Write operations</small></span><span class="pill neutral">${FEATURE_FLAGS.projectMutations?"On":"Off"}</span></div></div></aside></div>`;
+}
+
+function tableView(headers, rows, intro=""){
+  const body = rows.length ? rows.join("") : `<tr><td colspan="${headers.length}"><div class="empty-state"><strong>No records available</strong><span>Nothing is currently visible in this authenticated scope.</span></div></td></tr>`;
+  return `<section class="card panel">${intro?`<div class="panel-header"><div>${intro}</div></div>`:""}<div class="table-wrap"><table class="data-table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div></section>`;
+}
+
+function renderView(){
+  if(state.loading) return loadingState();
+  if(state.error) return errorState();
+  if(state.view==="overview") return overview();
+  if(state.view==="projects"||state.view==="assigned_work") return `<section class="card panel"><div class="panel-header"><div><h2>${label(state.view)}</h2><p>Authenticated read-only project view.</p></div></div>${projectCards()}</section>`;
+  if(state.view==="review") return tableView(["Project","Submission","Owner","Waiting","Priority"],state.reviews.map(x=>`<tr><td><strong>${x.project}</strong></td><td>${x.item}</td><td>${x.owner}</td><td>${x.age}</td><td>${badge(x.priority)}</td></tr>`),"<h2>Items requiring manager decision</h2><p>No approval action is enabled in staging.</p>");
+  if(state.view==="messages") return tableView(["Project","Sender","Message","Time","State"],state.messages.map(x=>`<tr><td><strong>${x.project}</strong></td><td>${x.from}</td><td>${x.text}</td><td>${x.time}</td><td>${badge(x.state)}</td></tr>`),"<h2>Project conversations</h2><p>Read-only message visibility for the authenticated role.</p>");
+  if(state.view==="communication_control") return `<div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Flagged communications</h2><p>Messages requiring policy review.</p></div></div>${state.messages.filter(x=>x.state==="flagged").map(x=>`<article class="policy-alert"><div><strong>${x.project}</strong><p>${x.text}</p><small>${x.time}</small></div>${badge(x.state)}</article>`).join("")||`<div class="empty-state"><strong>No flagged messages</strong><span>No policy review is currently required.</span></div>`}</section><aside class="card panel"><div class="panel-header"><div><h2>Policy rules</h2></div></div><div class="list">${state.communicationPolicy.map(x=>`<div class="list-row policy-row"><span><strong>${x.rule}</strong><small>${x.action}</small></span>${badge(x.state)}</div>`).join("")}</div></aside></div>`;
+  if(state.view==="files") return tableView(["File","Project","Scan","Availability"],state.files.map(x=>`<tr><td><strong>${x.name}</strong></td><td>${x.project}</td><td>${badge(x.scan)}</td><td>${badge(x.availability)}</td></tr>`),"<h2>Secure project files</h2><p>Downloads and uploads remain disabled.</p>");
+  if(state.view==="clients") return tableView(["Client","Primary contact","Projects","Status","Last activity"],state.clients.map(x=>`<tr><td><strong>${x.name}</strong></td><td>${x.contact}</td><td>${x.projects}</td><td>${badge(x.status)}</td><td>${x.lastActivity}</td></tr>`),"<h2>Client portfolio</h2><p>Relationship visibility for management.</p>");
+  if(state.view==="team") return tableView(["Team","Specialism","Active work","Capacity","State"],state.teamMembers.map(x=>`<tr><td><strong>${x.name}</strong></td><td>${x.role}</td><td>${x.active}</td><td>${x.capacity}</td><td>${badge(x.state)}</td></tr>`),"<h2>Delivery capacity</h2><p>Assignment and workload visibility.</p>");
+  if(state.view==="audit") return tableView(["Event","Actor","Target","Time"],state.auditEvents.map(x=>`<tr><td><strong>${x.event}</strong></td><td>${x.actor}</td><td>${x.target}</td><td>${x.time}</td></tr>`),"<h2>Operational audit trail</h2><p>Read-only derived events.</p>");
+  if(state.view==="billing") return `<section class="card panel"><div class="empty-state"><strong>Central billing integration is not enabled</strong><span>Payment state will be integrated through the shared ecosystem payment platform.</span></div></section>`;
+  return `<section class="card panel"><div class="empty-state"><strong>${label(state.view)}</strong><span>This module boundary is reserved for a later integration phase.</span></div></section>`;
+}
+
+function render(){
+  renderNav();
+  title.textContent=label(state.view);
+  description.textContent=descriptions[state.view] ?? "Structured workspace module.";
+  content.innerHTML=renderView();
+}
+
+window.addEventListener("hashchange",()=>{const key=location.hash.slice(1)||"overview";if(ROUTE_POLICY[state.role].includes(key)){state.view=key;render();}});
+nav.addEventListener("click",event=>{const link=event.target.closest("[data-view]");if(link){state.view=link.dataset.view;app.classList.remove("menu-open");render();}});
+document.querySelectorAll("[data-role]").forEach(button=>button.addEventListener("click",()=>setRole(button.dataset.role)));
+search.addEventListener("input",()=>{state.query=search.value;render();});
+document.querySelector("#mobile-menu-button").addEventListener("click",event=>{const open=app.classList.toggle("menu-open");event.currentTarget.setAttribute("aria-expanded",String(open));});
+
+async function initialise() {
+  if (!FEATURE_FLAGS.authentication) {
+    await setRole("manager");
+    return;
+  }
+
+  rolePreview.hidden = true;
+  app.classList.add("authenticated-workspace");
+  environmentPill.textContent = "Staging";
+  try {
+    const actor = await service.getActor();
+    if (!ROUTE_POLICY[actor.role]) throw new Error("Unsupported authenticated role");
+    state.actor = actor;
+    state.role = actor.role;
+    if (!ROUTE_POLICY[state.role].includes(state.view)) state.view = "overview";
+    history.replaceState(null, "", `#${state.view}`);
+    await loadRoleData(state.role, actor);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Authentication required";
+    if (message.toLowerCase().includes("authentication required")) {
+      location.replace("../workspace-access.html");
+      return;
+    }
+    state.error = error instanceof Error ? error : new Error("Unable to initialise authenticated workspace");
+    state.loading = false;
+    render();
+  }
+}
+
+initialise();

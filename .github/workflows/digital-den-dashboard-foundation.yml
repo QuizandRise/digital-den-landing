@@ -1,0 +1,50 @@
+name: Digital Den Dashboard Foundation
+
+on:
+  pull_request:
+    paths:
+      - "dashboard.html"
+      - "dashboard-next/**"
+      - "src/contracts/**"
+      - "scripts/validate-dashboard-foundation.mjs"
+      - "scripts/test-digital-den-role-isolation.mjs"
+      - "docs/digital-den/**"
+      - ".github/workflows/digital-den-dashboard-foundation.yml"
+  push:
+    branches:
+      - main
+      - feature/client-dashboard-v2
+    paths:
+      - "dashboard.html"
+      - "dashboard-next/**"
+      - "src/contracts/**"
+      - "scripts/validate-dashboard-foundation.mjs"
+      - "scripts/test-digital-den-role-isolation.mjs"
+      - "docs/digital-den/**"
+      - ".github/workflows/digital-den-dashboard-foundation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: digital-den-dashboard-foundation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate dashboard foundation
+        run: node scripts/validate-dashboard-foundation.mjs
+
+      - name: Test role isolation foundation
+        run: node scripts/test-digital-den-role-isolation.mjs
