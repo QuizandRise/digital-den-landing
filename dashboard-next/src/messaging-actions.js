@@ -33,7 +33,13 @@ async function loadContext() {
     requestJson("/api/digital-den/projects"),
   ]);
   actor = sessionPayload.actor || null;
-  projects = projectsPayload.projects || [];
+  const visibleProjects = projectsPayload.projects || [];
+  if (actor?.role === "team_member") {
+    const approved = new Set(actor.messagingProjectScopes || []);
+    projects = visibleProjects.filter(project => approved.has(String(project.projectId)));
+  } else {
+    projects = visibleProjects;
+  }
   initialised = true;
 }
 
@@ -62,6 +68,10 @@ function composerMarkup() {
   </section>`;
 }
 
+function noPermissionMarkup() {
+  return `<section id="message-composer" class="card panel" style="margin-bottom:18px"><div class="empty-state"><strong>Messaging permission has not been granted</strong><span>A Manager must approve client messaging for one of your assigned projects.</span></div></section>`;
+}
+
 async function injectComposer() {
   if (location.hash !== "#messages") return;
   const content = document.querySelector("#workspace-content");
@@ -73,7 +83,12 @@ async function injectComposer() {
     return;
   }
 
-  if (!actor || !["client", "manager"].includes(actor.role) || !projects.length) return;
+  if (!actor || !["client", "manager", "team_member"].includes(actor.role)) return;
+  if (!projects.length) {
+    if (actor.role === "team_member") content.insertAdjacentHTML("afterbegin", noPermissionMarkup());
+    return;
+  }
+
   content.insertAdjacentHTML("afterbegin", composerMarkup());
 
   const form = content.querySelector("#message-form");
