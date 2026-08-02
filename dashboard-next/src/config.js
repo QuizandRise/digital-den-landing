@@ -17,6 +17,7 @@ export const FEATURE_FLAGS = Object.freeze({
   messagingMutations: false,
   fileUpload: false,
   billing: false,
+  disputes: AUTHENTICATED_WORKSPACE,
 });
 
 export const API_CONFIG = Object.freeze({
@@ -25,14 +26,14 @@ export const API_CONFIG = Object.freeze({
 });
 
 export const ROUTE_POLICY = Object.freeze({
-  manager: ["overview", "projects", "review", "messages", "communication_control", "clients", "team", "audit"],
-  team_member: ["overview", "assigned_work", "messages", "files"],
-  client: ["overview", "projects", "messages", "files", "billing"],
+  manager: ["overview", "projects", "review", "messages", "communication_control", "clients", "team", "disputes", "audit"],
+  team_member: ["overview", "assigned_work", "messages", "files", "disputes"],
+  client: ["overview", "projects", "messages", "files", "disputes", "billing"],
 });
 
 export const NAVIGATION = Object.freeze({
   overview: ["◫", "Overview"], projects: ["◇", "Projects"], review: ["✓", "Review queue"],
   messages: ["◌", "Messages"], communication_control: ["⌁", "Communication control"],
-  clients: ["♙", "Clients"], team: ["♧", "Team"], audit: ["▤", "Audit log"],
+  clients: ["♙", "Clients"], team: ["♧", "Team"], disputes: ["⚖", "Disputes"], audit: ["▤", "Audit log"],
   assigned_work: ["◆", "Assigned work"], files: ["▱", "Files"], billing: ["£", "Billing"],
 });
