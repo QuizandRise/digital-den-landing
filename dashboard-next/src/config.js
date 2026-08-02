@@ -1,6 +1,11 @@
+const hostname = globalThis.location?.hostname ?? "";
+
+export const IS_STAGING_WORKSPACE =
+  hostname.includes("digital-den-landing-git-agent-digital-den-das-811984-");
+
 export const FEATURE_FLAGS = Object.freeze({
-  liveApi: false,
-  authentication: false,
+  liveApi: IS_STAGING_WORKSPACE,
+  authentication: IS_STAGING_WORKSPACE,
   projectMutations: false,
   messagingMutations: false,
   fileUpload: false,
