@@ -44,7 +44,7 @@ const badge = status => {
 };
 
 function loadingState(message="Loading workspace data…") {
-  return `<section class="card panel"><div class="empty-state"><strong>${message}</strong><span>Secure read-only workspace is initialising.</span></div></section>`;
+  return `<section class="card panel"><div class="empty-state"><strong>${message}</strong><span>Secure workspace is initialising.</span></div></section>`;
 }
 
 function errorState() {
@@ -116,7 +116,7 @@ function projectCards(){
 function overview(){
   const readyCount = state.projects.filter(x=>["ready_for_delivery","delivered"].includes(x.status)).length;
   if(state.role === "client") {
-    return `<div class="stats-grid"><div class="card stat-card"><small>Your projects</small><strong>${state.projects.length}</strong><em>Securely scoped</em></div><div class="card stat-card"><small>Project messages</small><strong>${state.messages.length}</strong><em>Read-only visibility</em></div><div class="card stat-card"><small>Available files</small><strong>${state.files.length}</strong><em>Project scoped</em></div><div class="card stat-card"><small>Ready to deliver</small><strong>${readyCount}</strong><em>Delivery status</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Your Digital Den projects</h2><p>Only projects linked to your verified email are visible.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>Secure access</h2><p>Authenticated client workspace.</p></div></div><div class="list"><div class="list-row"><span><strong>Live project data</strong><small>Read from Digital Den API</small></span><span class="pill neutral">On</span></div><div class="list-row"><span><strong>Client session</strong><small>HTTP-only secure session</small></span><span class="pill neutral">Active</span></div><div class="list-row"><span><strong>Write operations</strong><small>Updates and payments</small></span><span class="pill neutral">Off</span></div></div><div class="notice" style="margin-top:14px">This staging workspace can read your project record but cannot modify it.</div></aside></div>`;
+    return `<div class="stats-grid"><div class="card stat-card"><small>Your projects</small><strong>${state.projects.length}</strong><em>Securely scoped</em></div><div class="card stat-card"><small>Project messages</small><strong>${state.messages.length}</strong><em>Read-only visibility</em></div><div class="card stat-card"><small>Available files</small><strong>${state.files.length}</strong><em>Project scoped</em></div><div class="card stat-card"><small>Ready to deliver</small><strong>${readyCount}</strong><em>Delivery status</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Your Digital Den projects</h2><p>Only projects linked to your verified email are visible.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>Secure access</h2><p>Authenticated client workspace.</p></div></div><div class="list"><div class="list-row"><span><strong>Live project data</strong><small>Read from Digital Den API</small></span><span class="pill neutral">On</span></div><div class="list-row"><span><strong>Client session</strong><small>HTTP-only secure session</small></span><span class="pill neutral">Active</span></div><div class="list-row"><span><strong>Write operations</strong><small>Updates and payments</small></span><span class="pill neutral">Off</span></div></div><div class="notice" style="margin-top:14px">Your workspace is connected securely to your Digital Den project records.</div></aside></div>`;
   }
 
   const flagged = state.overview?.flaggedMessageCount ?? 0;
@@ -133,7 +133,7 @@ function renderView(){
   if(state.error) return errorState();
   if(state.view==="overview") return overview();
   if(state.view==="projects"||state.view==="assigned_work") return `<section class="card panel"><div class="panel-header"><div><h2>${label(state.view)}</h2><p>Authenticated read-only project view.</p></div></div>${projectCards()}</section>`;
-  if(state.view==="review") return tableView(["Project","Submission","Owner","Waiting","Priority"],state.reviews.map(x=>`<tr><td><strong>${x.project}</strong></td><td>${x.item}</td><td>${x.owner}</td><td>${x.age}</td><td>${badge(x.priority)}</td></tr>`),"<h2>Items requiring manager decision</h2><p>No approval action is enabled in staging.</p>");
+  if(state.view==="review") return tableView(["Project","Submission","Owner","Waiting","Priority"],state.reviews.map(x=>`<tr><td><strong>${x.project}</strong></td><td>${x.item}</td><td>${x.owner}</td><td>${x.age}</td><td>${badge(x.priority)}</td></tr>`),"<h2>Items requiring manager decision</h2><p>No approval action is enabled yet.</p>");
   if(state.view==="messages") return tableView(["Project","Sender","Message","Time","State"],state.messages.map(x=>`<tr><td><strong>${x.project}</strong></td><td>${x.from}</td><td>${x.text}</td><td>${x.time}</td><td>${badge(x.state)}</td></tr>`),"<h2>Project conversations</h2><p>Read-only message visibility for the authenticated role.</p>");
   if(state.view==="communication_control") return `<div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Flagged communications</h2><p>Messages requiring policy review.</p></div></div>${state.messages.filter(x=>x.state==="flagged").map(x=>`<article class="policy-alert"><div><strong>${x.project}</strong><p>${x.text}</p><small>${x.time}</small></div>${badge(x.state)}</article>`).join("")||`<div class="empty-state"><strong>No flagged messages</strong><span>No policy review is currently required.</span></div>`}</section><aside class="card panel"><div class="panel-header"><div><h2>Policy rules</h2></div></div><div class="list">${state.communicationPolicy.map(x=>`<div class="list-row policy-row"><span><strong>${x.rule}</strong><small>${x.action}</small></span>${badge(x.state)}</div>`).join("")}</div></aside></div>`;
   if(state.view==="files") return tableView(["File","Project","Scan","Availability"],state.files.map(x=>`<tr><td><strong>${x.name}</strong></td><td>${x.project}</td><td>${badge(x.scan)}</td><td>${badge(x.availability)}</td></tr>`),"<h2>Secure project files</h2><p>Downloads and uploads remain disabled.</p>");
@@ -165,14 +165,14 @@ async function initialise() {
 
   rolePreview.hidden = true;
   app.classList.add("authenticated-workspace");
-  environmentPill.textContent = "Staging";
+  environmentPill.textContent = "Client Workspace";
   try {
     const actor = await service.getActor();
     if (!ROUTE_POLICY[actor.role]) throw new Error("Unsupported authenticated role");
     state.actor = actor;
     state.role = actor.role;
     if (!ROUTE_POLICY[state.role].includes(state.view)) state.view = "overview";
-    history.replaceState(null, "", `#${state.view}`);
+    history.replaceState(null, "",`#${state.view}`);
     await loadRoleData(state.role, actor);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Authentication required";
