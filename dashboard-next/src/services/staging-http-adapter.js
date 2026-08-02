@@ -8,19 +8,24 @@ function getStagingBaseUrl() {
   return API_CONFIG.baseUrl.replace(/\/$/, "");
 }
 
-async function requestJson(path, { signal } = {}) {
+async function requestJson(path, { signal, method = "GET", body, intent } = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
   const combinedSignal = signal ?? controller.signal;
 
   try {
+    const headers = {
+      Accept: "application/json",
+      "X-Digital-Den-Contract-Version": API_CONFIG.contractVersion,
+    };
+    if (body !== undefined) headers["Content-Type"] = "application/json";
+    if (intent) headers["X-Digital-Den-Intent"] = intent;
+
     const response = await fetch(`${getStagingBaseUrl()}${path}`, {
-      method: "GET",
+      method,
       credentials: "include",
-      headers: {
-        Accept: "application/json",
-        "X-Digital-Den-Contract-Version": API_CONFIG.contractVersion,
-      },
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
       signal: combinedSignal,
       cache: "no-store",
     });
@@ -28,7 +33,7 @@ async function requestJson(path, { signal } = {}) {
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
       const correlationId = response.headers.get("x-correlation-id") ?? payload?.error?.correlationId ?? "unavailable";
-      const message = payload?.error?.message ?? `Read-only staging request failed (${response.status})`;
+      const message = payload?.error?.message ?? `Workspace request failed (${response.status})`;
       const error = new Error(`${message}; correlationId=${correlationId}`);
       error.status = response.status;
       throw error;
@@ -60,6 +65,21 @@ function mapProject(project) {
     status: project.status,
     progress: Number(project.progressPercent || 0),
     updated: dateLabel(project.updatedAt),
+  };
+}
+
+function mapTeamMember(item) {
+  return {
+    id: item.userId,
+    name: item.name,
+    email: item.email,
+    role: item.role,
+    status: item.status,
+    projectScopes: item.projectScopes || [],
+    invitedBy: item.invitedBy || "—",
+    invitedAt: dateLabel(item.invitedAt),
+    activatedAt: dateLabel(item.activatedAt),
+    lastAccessAt: dateLabel(item.lastAccessAt),
   };
 }
 
@@ -125,8 +145,29 @@ export function createStagingHttpAdapter() {
     },
     async getTeam(role) {
       if (role !== "manager") return [];
-      const payload = await requestJson("/api/digital-den/team");
-      return payload.team || [];
+      try {
+        const payload = await requestJson("/api/digital-den/team/manage");
+        return (payload.team || []).map(mapTeamMember);
+      } catch (error) {
+        if (error.status === 404) return [];
+        throw error;
+      }
+    },
+    async createTeamMember(input) {
+      const payload = await requestJson("/api/digital-den/team/manage", {
+        method: "POST",
+        intent: "team-administration",
+        body: input,
+      });
+      return mapTeamMember(payload.teamMember);
+    },
+    async updateTeamMember(input) {
+      const payload = await requestJson("/api/digital-den/team/manage", {
+        method: "PATCH",
+        intent: "team-administration",
+        body: input,
+      });
+      return mapTeamMember(payload.teamMember);
     },
     async getAuditEvents(role) {
       if (role !== "manager") return [];
