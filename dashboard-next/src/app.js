@@ -1,5 +1,6 @@
 import { FEATURE_FLAGS, ROUTE_POLICY, NAVIGATION } from "./config.js";
 import { createDashboardService } from "./services/dashboard-service.js";
+import { attachTeamInvitationActions, teamInviteStatusPanel, teamMemberActions } from "./team-invite-actions.js";
 
 const service = createDashboardService();
 const state = {
@@ -139,7 +140,7 @@ function teamView(){
     <td>${badge(member.status)}</td>
     <td>${member.projectScopes.length}</td>
     <td>${escapeHtml(member.lastAccessAt)}</td>
-    <td><button class="button secondary" type="button" data-team-edit="${escapeHtml(member.id)}">Manage</button></td>
+    <td>${teamMemberActions(member, escapeHtml)}</td>
   </tr>`).join("") : `<tr><td colspan="5"><div class="empty-state"><strong>No team members yet</strong><span>Invite the first delivery team member using the form.</span></div></td></tr>`;
 
   return `<div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Invite team member</h2><p>Create or update a team account and assign project access.</p></div></div>
@@ -151,6 +152,7 @@ function teamView(){
       <label id="team-status-row" hidden><strong>Status</strong><select id="team-status"><option value="invited">Invited</option><option value="active">Active</option><option value="suspended">Suspended</option></select></label>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="button primary" type="submit" id="team-save">Save team member</button><button class="button secondary" type="button" id="team-cancel" hidden>Cancel edit</button></div>
       <div id="team-form-status" class="notice" hidden></div>
+      ${teamInviteStatusPanel()}
     </form>
   </section><section class="card panel"><div class="panel-header"><div><h2>Team access</h2><p>Manager-controlled identities and project assignments.</p></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Team member</th><th>Status</th><th>Projects</th><th>Last access</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div></section></div>`;
 }
@@ -195,6 +197,8 @@ async function refreshTeam() {
   render();
 }
 
+attachTeamInvitationActions({ content, state, service, render, escapeHtml });
+
 content.addEventListener("click", event => {
   const button = event.target.closest("[data-team-edit]");
   if (button) {
@@ -222,21 +226,24 @@ content.addEventListener("submit", async event => {
   statusBox.textContent = "Saving team access…";
   try {
     const userId = document.querySelector("#team-user-id").value;
+    let result;
     if (userId) {
-      await service.updateTeamMember({
+      result = await service.updateTeamMember({
         userId,
         name: document.querySelector("#team-name").value,
         status: document.querySelector("#team-status").value,
         projectScopes: selectedProjectIds(),
       });
     } else {
-      await service.createTeamMember({
+      result = await service.createTeamMember({
         name: document.querySelector("#team-name").value,
         email: document.querySelector("#team-email").value,
         projectScopes: selectedProjectIds(),
       });
     }
-    statusBox.textContent = "Team access saved successfully.";
+    statusBox.textContent = result.invitationSent
+      ? "Team access saved and invitation sent successfully."
+      : "Team access saved. Invitation delivery was not confirmed.";
     resetTeamForm();
     await refreshTeam();
   } catch (error) {
