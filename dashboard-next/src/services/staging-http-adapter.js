@@ -2,6 +2,7 @@ import { API_CONFIG } from "../config.js";
 import { assertReadOnlyAdapter } from "./adapter-contract.js";
 
 const DEFAULT_TIMEOUT_MS = 8000;
+const dateLabel = value => value ? new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—";
 
 function getStagingBaseUrl() {
   return API_CONFIG.baseUrl.replace(/\/$/, "");
@@ -28,7 +29,9 @@ async function requestJson(path, { signal } = {}) {
     if (!response.ok) {
       const correlationId = response.headers.get("x-correlation-id") ?? payload?.error?.correlationId ?? "unavailable";
       const message = payload?.error?.message ?? `Read-only staging request failed (${response.status})`;
-      throw new Error(`${message}; correlationId=${correlationId}`);
+      const error = new Error(`${message}; correlationId=${correlationId}`);
+      error.status = response.status;
+      throw error;
     }
 
     return payload;
@@ -37,20 +40,112 @@ async function requestJson(path, { signal } = {}) {
   }
 }
 
+function mapActor(actor) {
+  const role = actor?.role ?? "client";
+  const label = role === "manager" ? "Manager" : role === "team_member" ? "Team member" : "Client";
+  return {
+    ...actor,
+    name: label,
+    initials: label.split(" ").map(part => part[0]).join("").slice(0, 2).toUpperCase(),
+    label: `${label} workspace`,
+  };
+}
+
+function mapProject(project) {
+  return {
+    id: project.projectId,
+    title: project.title,
+    client: project.clientId || "Digital Den client",
+    service: project.serviceCategory || "Creative service",
+    status: project.status,
+    progress: Number(project.progressPercent || 0),
+    updated: dateLabel(project.updatedAt),
+  };
+}
+
 export function createStagingHttpAdapter() {
   return assertReadOnlyAdapter({
     async getActor() {
       const payload = await requestJson("/api/digital-den/session");
-      return payload.actor;
+      return mapActor(payload.actor);
     },
-    getOverview: () => requestJson("/api/digital-den/overview"),
-    getProjects: () => requestJson("/api/digital-den/projects"),
-    getReviews: () => requestJson("/api/digital-den/reviews"),
-    getMessages: () => requestJson("/api/digital-den/messages"),
-    getFiles: () => requestJson("/api/digital-den/files"),
-    getClients: () => requestJson("/api/digital-den/clients"),
-    getTeam: () => requestJson("/api/digital-den/team"),
-    getAuditEvents: () => requestJson("/api/digital-den/audit"),
-    getCommunicationPolicies: () => requestJson("/api/digital-den/communication-policies"),
+    async getOverview() {
+      const payload = await requestJson("/api/digital-den/overview");
+      return {
+        projects: (payload.projects || []).map(mapProject),
+        reviews: payload.reviewQueue || [],
+        unreadMessageCount: payload.unreadMessageCount || 0,
+        flaggedMessageCount: payload.flaggedMessageCount || 0,
+      };
+    },
+    async getProjects() {
+      const payload = await requestJson("/api/digital-den/projects");
+      return (payload.projects || []).map(mapProject);
+    },
+    async getReviews(role) {
+      if (role !== "manager") return [];
+      const payload = await requestJson("/api/digital-den/reviews");
+      return (payload.reviews || []).map(item => ({
+        project: item.projectTitle || item.projectId,
+        item: item.submission || "Review item",
+        owner: item.owner || "—",
+        age: dateLabel(item.submittedAt),
+        priority: item.priority || "normal",
+      }));
+    },
+    async getMessages() {
+      const payload = await requestJson("/api/digital-den/messages");
+      return (payload.messages || []).map(item => ({
+        project: item.projectId,
+        from: item.senderRole || item.senderId,
+        text: item.body,
+        time: dateLabel(item.createdAt),
+        state: item.moderationState || "clear",
+      }));
+    },
+    async getFiles() {
+      const payload = await requestJson("/api/digital-den/files");
+      return (payload.files || []).map(item => ({
+        name: item.name,
+        project: item.projectId,
+        scan: item.malwareScanState || "pending",
+        availability: item.downloadState || "unavailable",
+      }));
+    },
+    async getClients(role) {
+      if (role !== "manager") return [];
+      const payload = await requestJson("/api/digital-den/clients");
+      return (payload.clients || []).map(item => ({
+        name: item.name || item.companyName || item.email,
+        contact: item.email,
+        projects: item.projectCount || 0,
+        status: "Active",
+        lastActivity: dateLabel(item.lastActivityAt),
+      }));
+    },
+    async getTeam(role) {
+      if (role !== "manager") return [];
+      const payload = await requestJson("/api/digital-den/team");
+      return payload.team || [];
+    },
+    async getAuditEvents(role) {
+      if (role !== "manager") return [];
+      const payload = await requestJson("/api/digital-den/audit");
+      return (payload.events || []).map(item => ({
+        event: item.event,
+        actor: item.actorId,
+        target: item.targetId,
+        time: dateLabel(item.occurredAt),
+      }));
+    },
+    async getCommunicationPolicies(role) {
+      if (role !== "manager") return [];
+      const payload = await requestJson("/api/digital-den/communication-policies");
+      return (payload.policies || []).map(item => ({
+        rule: item.code,
+        action: item.action,
+        state: item.enforcement,
+      }));
+    },
   });
 }
