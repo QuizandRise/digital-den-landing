@@ -1,0 +1,46 @@
+@media (max-width: 720px) {
+  .sidebar {
+    width: min(86vw, 320px);
+    left: min(-86vw, -320px);
+    padding: 18px 14px;
+    overflow-y: auto;
+  }
+
+  .app-shell.menu-open .sidebar {
+    left: 0;
+    box-shadow: 24px 0 60px rgba(0, 0, 0, .45);
+  }
+
+  .sidebar .brand {
+    justify-content: flex-start;
+  }
+
+  .sidebar .brand span:last-child,
+  .sidebar .nav-link span:last-child,
+  .sidebar .identity-card span:last-child {
+    display: block;
+  }
+
+  .sidebar .preview-banner {
+    display: block;
+  }
+
+  .sidebar .nav-link,
+  .sidebar .identity-card {
+    justify-content: flex-start;
+  }
+
+  .sidebar .nav-link {
+    min-height: 46px;
+    padding: 12px 14px;
+  }
+
+  .sidebar .nav-link span:first-child {
+    flex: 0 0 24px;
+  }
+
+  .sidebar-footer {
+    position: static;
+    margin-top: 22px;
+  }
+}
