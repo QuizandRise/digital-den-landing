@@ -8,7 +8,7 @@ export const FEATURE_FLAGS = Object.freeze({
 });
 
 export const API_CONFIG = Object.freeze({
-  baseUrl: "https://digital-den-api.vercel.app",
+  baseUrl: globalThis.location?.origin ?? "",
   contractVersion: "2026-08-01.v1",
 });
 
