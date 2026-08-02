@@ -32,23 +32,24 @@ const environmentPill = document.querySelector("#environment-pill");
 const descriptions = {
   overview:"Role-scoped project delivery visibility.", projects:"Projects visible within the current actor scope.",
   review:"Manager-controlled approval queue.", messages:"Authorised project conversations.", communication_control:"Communication policy, moderation rules and flagged-item visibility.",
-  clients:"Client relationships, project load and recent activity.", team:"Team capacity and assignment visibility.", audit:"Read-only operational history.",
+  clients:"Client relationships, project load and recent activity.", team:"Invite team members and control project access.", audit:"Read-only operational history.",
   assigned_work:"Workstreams assigned to this team member.", files:"Scanned project files available to this role.", billing:"Payment-state placeholder for future central integration.",
 };
 
 const label = key => NAVIGATION[key]?.[1] ?? key.replaceAll("_", " ");
 const badge = status => {
   const value=String(status).toLowerCase();
-  const tone=value.includes("flag")||value.includes("high")?"red":value.includes("review")||value.includes("pending")||value.includes("capacity")?"amber":value.includes("ready")||value.includes("available")||value.includes("clear")||value.includes("clean")||value.includes("delivered")?"green":"cyan";
+  const tone=value.includes("flag")||value.includes("high")||value.includes("suspended")?"red":value.includes("review")||value.includes("pending")||value.includes("capacity")||value.includes("invited")?"amber":value.includes("ready")||value.includes("available")||value.includes("clear")||value.includes("clean")||value.includes("delivered")||value.includes("active")?"green":"cyan";
   return `<span class="badge ${tone}">${String(status).replaceAll("_", " ")}</span>`;
 };
+const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[char]));
 
 function loadingState(message="Loading workspace data…") {
   return `<section class="card panel"><div class="empty-state"><strong>${message}</strong><span>Secure workspace is initialising.</span></div></section>`;
 }
 
 function errorState() {
-  return `<section class="card panel"><div class="empty-state"><strong>Workspace data could not be loaded</strong><span>${state.error?.message ?? "Unknown read-only adapter error."}</span></div></section>`;
+  return `<section class="card panel"><div class="empty-state"><strong>Workspace data could not be loaded</strong><span>${state.error?.message ?? "Unknown adapter error."}</span></div></section>`;
 }
 
 function setIdentity(actor) {
@@ -110,7 +111,7 @@ function visibleProjects(){
 function projectCards(){
   const list=visibleProjects();
   if(!list.length) return `<div class="empty-state"><strong>No projects are available</strong><span>No project in this authenticated scope matches the current view.</span></div>`;
-  return list.map(project=>`<article class="project-card"><div class="project-head"><div><h3>${project.title}</h3><div class="meta">${project.id} · ${project.service}</div></div>${badge(project.status)}</div><div class="progress" aria-label="${project.progress}% complete"><span style="width:${project.progress}%"></span></div><div class="meta">${project.progress}% complete · Updated ${project.updated}</div></article>`).join("");
+  return list.map(project=>`<article class="project-card"><div class="project-head"><div><h3>${escapeHtml(project.title)}</h3><div class="meta">${escapeHtml(project.id)} · ${escapeHtml(project.service)}</div></div>${badge(project.status)}</div><div class="progress" aria-label="${project.progress}% complete"><span style="width:${project.progress}%"></span></div><div class="meta">${project.progress}% complete · Updated ${escapeHtml(project.updated)}</div></article>`).join("");
 }
 
 function overview(){
@@ -120,7 +121,7 @@ function overview(){
   }
 
   const flagged = state.overview?.flaggedMessageCount ?? 0;
-  return `<div class="stats-grid"><div class="card stat-card"><small>Visible projects</small><strong>${state.projects.length}</strong><em>Role scoped</em></div><div class="card stat-card"><small>Awaiting review</small><strong>${state.role==="manager"?state.reviews.length:"—"}</strong><em>${state.role==="manager"?"Manager action required":"Not in this role"}</em></div><div class="card stat-card"><small>Ready to deliver</small><strong>${readyCount}</strong><em>All checks passed</em></div><div class="card stat-card"><small>Flagged messages</small><strong>${state.role==="manager"?flagged:"—"}</strong><em>Policy controlled</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Current projects</h2><p>Read through the isolated dashboard service.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>System state</h2><p>Production capabilities remain disabled.</p></div></div><div class="list"><div class="list-row"><span><strong>Live API</strong><small>External data connection</small></span><span class="pill neutral">${FEATURE_FLAGS.liveApi?"On":"Off"}</span></div><div class="list-row"><span><strong>Authentication</strong><small>Real session enforcement</small></span><span class="pill neutral">${FEATURE_FLAGS.authentication?"On":"Off"}</span></div><div class="list-row"><span><strong>Mutations</strong><small>Write operations</small></span><span class="pill neutral">${FEATURE_FLAGS.projectMutations?"On":"Off"}</span></div></div></aside></div>`;
+  return `<div class="stats-grid"><div class="card stat-card"><small>Visible projects</small><strong>${state.projects.length}</strong><em>Role scoped</em></div><div class="card stat-card"><small>Awaiting review</small><strong>${state.role==="manager"?state.reviews.length:"—"}</strong><em>${state.role==="manager"?"Manager action required":"Not in this role"}</em></div><div class="card stat-card"><small>Ready to deliver</small><strong>${readyCount}</strong><em>All checks passed</em></div><div class="card stat-card"><small>Flagged messages</small><strong>${state.role==="manager"?flagged:"—"}</strong><em>Policy controlled</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Current projects</h2><p>Read through the isolated dashboard service.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>System state</h2><p>Authenticated production workspace.</p></div></div><div class="list"><div class="list-row"><span><strong>Live API</strong><small>External data connection</small></span><span class="pill neutral">${FEATURE_FLAGS.liveApi?"On":"Off"}</span></div><div class="list-row"><span><strong>Authentication</strong><small>Real session enforcement</small></span><span class="pill neutral">${FEATURE_FLAGS.authentication?"On":"Off"}</span></div><div class="list-row"><span><strong>Mutations</strong><small>Controlled operations</small></span><span class="pill neutral">${FEATURE_FLAGS.projectMutations?"On":"Off"}</span></div></div></aside></div>`;
 }
 
 function tableView(headers, rows, intro=""){
@@ -128,18 +129,44 @@ function tableView(headers, rows, intro=""){
   return `<section class="card panel">${intro?`<div class="panel-header"><div>${intro}</div></div>`:""}<div class="table-wrap"><table class="data-table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div></section>`;
 }
 
+function projectOptions(selected = []) {
+  return state.projects.map(project => `<option value="${escapeHtml(project.id)}" ${selected.includes(project.id)?"selected":""}>${escapeHtml(project.title)} — ${escapeHtml(project.client)}</option>`).join("");
+}
+
+function teamView(){
+  const rows = state.teamMembers.length ? state.teamMembers.map(member => `<tr>
+    <td><strong>${escapeHtml(member.name)}</strong><small style="display:block">${escapeHtml(member.email)}</small></td>
+    <td>${badge(member.status)}</td>
+    <td>${member.projectScopes.length}</td>
+    <td>${escapeHtml(member.lastAccessAt)}</td>
+    <td><button class="button secondary" type="button" data-team-edit="${escapeHtml(member.id)}">Manage</button></td>
+  </tr>`).join("") : `<tr><td colspan="5"><div class="empty-state"><strong>No team members yet</strong><span>Invite the first delivery team member using the form.</span></div></td></tr>`;
+
+  return `<div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Invite team member</h2><p>Create or update a team account and assign project access.</p></div></div>
+    <form id="team-form" class="list" style="gap:14px">
+      <input id="team-user-id" type="hidden">
+      <label><strong>Name</strong><input id="team-name" type="text" maxlength="160" required placeholder="Team member name"></label>
+      <label><strong>Email</strong><input id="team-email" type="email" maxlength="320" required placeholder="name@example.com"></label>
+      <label><strong>Assigned projects</strong><select id="team-projects" multiple size="6">${projectOptions()}</select><small class="meta">Select one or more projects. Leave empty for no project access.</small></label>
+      <label id="team-status-row" hidden><strong>Status</strong><select id="team-status"><option value="invited">Invited</option><option value="active">Active</option><option value="suspended">Suspended</option></select></label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="button primary" type="submit" id="team-save">Save team member</button><button class="button secondary" type="button" id="team-cancel" hidden>Cancel edit</button></div>
+      <div id="team-form-status" class="notice" hidden></div>
+    </form>
+  </section><section class="card panel"><div class="panel-header"><div><h2>Team access</h2><p>Manager-controlled identities and project assignments.</p></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Team member</th><th>Status</th><th>Projects</th><th>Last access</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div></section></div>`;
+}
+
 function renderView(){
   if(state.loading) return loadingState();
   if(state.error) return errorState();
   if(state.view==="overview") return overview();
-  if(state.view==="projects"||state.view==="assigned_work") return `<section class="card panel"><div class="panel-header"><div><h2>${label(state.view)}</h2><p>Authenticated read-only project view.</p></div></div>${projectCards()}</section>`;
-  if(state.view==="review") return tableView(["Project","Submission","Owner","Waiting","Priority"],state.reviews.map(x=>`<tr><td><strong>${x.project}</strong></td><td>${x.item}</td><td>${x.owner}</td><td>${x.age}</td><td>${badge(x.priority)}</td></tr>`),"<h2>Items requiring manager decision</h2><p>No approval action is enabled yet.</p>");
-  if(state.view==="messages") return tableView(["Project","Sender","Message","Time","State"],state.messages.map(x=>`<tr><td><strong>${x.project}</strong></td><td>${x.from}</td><td>${x.text}</td><td>${x.time}</td><td>${badge(x.state)}</td></tr>`),"<h2>Project conversations</h2><p>Read-only message visibility for the authenticated role.</p>");
-  if(state.view==="communication_control") return `<div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Flagged communications</h2><p>Messages requiring policy review.</p></div></div>${state.messages.filter(x=>x.state==="flagged").map(x=>`<article class="policy-alert"><div><strong>${x.project}</strong><p>${x.text}</p><small>${x.time}</small></div>${badge(x.state)}</article>`).join("")||`<div class="empty-state"><strong>No flagged messages</strong><span>No policy review is currently required.</span></div>`}</section><aside class="card panel"><div class="panel-header"><div><h2>Policy rules</h2></div></div><div class="list">${state.communicationPolicy.map(x=>`<div class="list-row policy-row"><span><strong>${x.rule}</strong><small>${x.action}</small></span>${badge(x.state)}</div>`).join("")}</div></aside></div>`;
-  if(state.view==="files") return tableView(["File","Project","Scan","Availability"],state.files.map(x=>`<tr><td><strong>${x.name}</strong></td><td>${x.project}</td><td>${badge(x.scan)}</td><td>${badge(x.availability)}</td></tr>`),"<h2>Secure project files</h2><p>Downloads and uploads remain disabled.</p>");
-  if(state.view==="clients") return tableView(["Client","Primary contact","Projects","Status","Last activity"],state.clients.map(x=>`<tr><td><strong>${x.name}</strong></td><td>${x.contact}</td><td>${x.projects}</td><td>${badge(x.status)}</td><td>${x.lastActivity}</td></tr>`),"<h2>Client portfolio</h2><p>Relationship visibility for management.</p>");
-  if(state.view==="team") return tableView(["Team","Specialism","Active work","Capacity","State"],state.teamMembers.map(x=>`<tr><td><strong>${x.name}</strong></td><td>${x.role}</td><td>${x.active}</td><td>${x.capacity}</td><td>${badge(x.state)}</td></tr>`),"<h2>Delivery capacity</h2><p>Assignment and workload visibility.</p>");
-  if(state.view==="audit") return tableView(["Event","Actor","Target","Time"],state.auditEvents.map(x=>`<tr><td><strong>${x.event}</strong></td><td>${x.actor}</td><td>${x.target}</td><td>${x.time}</td></tr>`),"<h2>Operational audit trail</h2><p>Read-only derived events.</p>");
+  if(state.view==="projects"||state.view==="assigned_work") return `<section class="card panel"><div class="panel-header"><div><h2>${label(state.view)}</h2><p>Authenticated project view.</p></div></div>${projectCards()}</section>`;
+  if(state.view==="review") return tableView(["Project","Submission","Owner","Waiting","Priority"],state.reviews.map(x=>`<tr><td><strong>${escapeHtml(x.project)}</strong></td><td>${escapeHtml(x.item)}</td><td>${escapeHtml(x.owner)}</td><td>${escapeHtml(x.age)}</td><td>${badge(x.priority)}</td></tr>`),"<h2>Items requiring manager decision</h2><p>No approval action is enabled yet.</p>");
+  if(state.view==="messages") return tableView(["Project","Sender","Message","Time","State"],state.messages.map(x=>`<tr><td><strong>${escapeHtml(x.project)}</strong></td><td>${escapeHtml(x.from)}</td><td>${escapeHtml(x.text)}</td><td>${escapeHtml(x.time)}</td><td>${badge(x.state)}</td></tr>`),"<h2>Project conversations</h2><p>Read-only message visibility for the authenticated role.</p>");
+  if(state.view==="communication_control") return `<div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Flagged communications</h2><p>Messages requiring policy review.</p></div></div>${state.messages.filter(x=>x.state==="flagged").map(x=>`<article class="policy-alert"><div><strong>${escapeHtml(x.project)}</strong><p>${escapeHtml(x.text)}</p><small>${escapeHtml(x.time)}</small></div>${badge(x.state)}</article>`).join("")||`<div class="empty-state"><strong>No flagged messages</strong><span>No policy review is currently required.</span></div>`}</section><aside class="card panel"><div class="panel-header"><div><h2>Policy rules</h2></div></div><div class="list">${state.communicationPolicy.map(x=>`<div class="list-row policy-row"><span><strong>${escapeHtml(x.rule)}</strong><small>${escapeHtml(x.action)}</small></span>${badge(x.state)}</div>`).join("")}</div></aside></div>`;
+  if(state.view==="files") return tableView(["File","Project","Scan","Availability"],state.files.map(x=>`<tr><td><strong>${escapeHtml(x.name)}</strong></td><td>${escapeHtml(x.project)}</td><td>${badge(x.scan)}</td><td>${badge(x.availability)}</td></tr>`),"<h2>Secure project files</h2><p>Downloads and uploads remain disabled.</p>");
+  if(state.view==="clients") return tableView(["Client","Primary contact","Projects","Status","Last activity"],state.clients.map(x=>`<tr><td><strong>${escapeHtml(x.name)}</strong></td><td>${escapeHtml(x.contact)}</td><td>${x.projects}</td><td>${badge(x.status)}</td><td>${escapeHtml(x.lastActivity)}</td></tr>`),"<h2>Client portfolio</h2><p>Relationship visibility for management.</p>");
+  if(state.view==="team") return teamView();
+  if(state.view==="audit") return tableView(["Event","Actor","Target","Time"],state.auditEvents.map(x=>`<tr><td><strong>${escapeHtml(x.event)}</strong></td><td>${escapeHtml(x.actor)}</td><td>${escapeHtml(x.target)}</td><td>${escapeHtml(x.time)}</td></tr>`),"<h2>Operational audit trail</h2><p>Read-only derived events.</p>");
   if(state.view==="billing") return `<section class="card panel"><div class="empty-state"><strong>Central billing integration is not enabled</strong><span>Payment state will be integrated through the shared ecosystem payment platform.</span></div></section>`;
   return `<section class="card panel"><div class="empty-state"><strong>${label(state.view)}</strong><span>This module boundary is reserved for a later integration phase.</span></div></section>`;
 }
@@ -150,6 +177,74 @@ function render(){
   description.textContent=descriptions[state.view] ?? "Structured workspace module.";
   content.innerHTML=renderView();
 }
+
+function selectedProjectIds() {
+  return [...document.querySelectorAll("#team-projects option:checked")].map(option => option.value);
+}
+
+function resetTeamForm() {
+  document.querySelector("#team-form")?.reset();
+  const id = document.querySelector("#team-user-id"); if (id) id.value = "";
+  const email = document.querySelector("#team-email"); if (email) email.disabled = false;
+  const statusRow = document.querySelector("#team-status-row"); if (statusRow) statusRow.hidden = true;
+  const cancel = document.querySelector("#team-cancel"); if (cancel) cancel.hidden = true;
+}
+
+async function refreshTeam() {
+  state.teamMembers = await service.getTeam("manager");
+  render();
+}
+
+content.addEventListener("click", event => {
+  const button = event.target.closest("[data-team-edit]");
+  if (button) {
+    const member = state.teamMembers.find(item => item.id === button.dataset.teamEdit);
+    if (!member) return;
+    document.querySelector("#team-user-id").value = member.id;
+    document.querySelector("#team-name").value = member.name;
+    document.querySelector("#team-email").value = member.email;
+    document.querySelector("#team-email").disabled = true;
+    document.querySelector("#team-status").value = member.status;
+    document.querySelector("#team-status-row").hidden = false;
+    document.querySelector("#team-cancel").hidden = false;
+    document.querySelectorAll("#team-projects option").forEach(option => { option.selected = member.projectScopes.includes(option.value); });
+  }
+  if (event.target.closest("#team-cancel")) resetTeamForm();
+});
+
+content.addEventListener("submit", async event => {
+  if (event.target.id !== "team-form") return;
+  event.preventDefault();
+  const statusBox = document.querySelector("#team-form-status");
+  const save = document.querySelector("#team-save");
+  save.disabled = true;
+  statusBox.hidden = false;
+  statusBox.textContent = "Saving team access…";
+  try {
+    const userId = document.querySelector("#team-user-id").value;
+    if (userId) {
+      await service.updateTeamMember({
+        userId,
+        name: document.querySelector("#team-name").value,
+        status: document.querySelector("#team-status").value,
+        projectScopes: selectedProjectIds(),
+      });
+    } else {
+      await service.createTeamMember({
+        name: document.querySelector("#team-name").value,
+        email: document.querySelector("#team-email").value,
+        projectScopes: selectedProjectIds(),
+      });
+    }
+    statusBox.textContent = "Team access saved successfully.";
+    resetTeamForm();
+    await refreshTeam();
+  } catch (error) {
+    statusBox.textContent = error.message;
+  } finally {
+    save.disabled = false;
+  }
+});
 
 window.addEventListener("hashchange",()=>{const key=location.hash.slice(1)||"overview";if(ROUTE_POLICY[state.role].includes(key)){state.view=key;render();}});
 nav.addEventListener("click",event=>{const link=event.target.closest("[data-view]");if(link){state.view=link.dataset.view;app.classList.remove("menu-open");render();}});
@@ -165,12 +260,12 @@ async function initialise() {
 
   rolePreview.hidden = true;
   app.classList.add("authenticated-workspace");
-  environmentPill.textContent = "Client Workspace";
   try {
     const actor = await service.getActor();
     if (!ROUTE_POLICY[actor.role]) throw new Error("Unsupported authenticated role");
     state.actor = actor;
     state.role = actor.role;
+    environmentPill.textContent = actor.role === "manager" ? "Manager Workspace" : actor.role === "team_member" ? "Team Workspace" : "Client Workspace";
     if (!ROUTE_POLICY[state.role].includes(state.view)) state.view = "overview";
     history.replaceState(null, "",`#${state.view}`);
     await loadRoleData(state.role, actor);
