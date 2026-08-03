@@ -20,6 +20,7 @@ const state = {
   auditEvents: [],
   communicationPolicy: [],
 };
+globalThis.__digitalDenDashboardState = state;
 
 const app = document.querySelector("#app");
 const nav = document.querySelector("#primary-nav");
@@ -166,34 +167,38 @@ function renderView(){
   if(state.view==="messages") return tableView(["Project","Sender","Message","Time","State"],state.messages.map(x=>`<tr><td><strong>${escapeHtml(x.project)}</strong></td><td>${escapeHtml(x.from)}</td><td>${escapeHtml(x.text)}</td><td>${escapeHtml(x.time)}</td><td>${badge(x.state)}</td></tr>`),"<h2>Project conversations</h2><p>Read-only message visibility for the authenticated role.</p>");
   if(state.view==="communication_control") return `<div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Flagged communications</h2><p>Messages requiring policy review.</p></div></div>${state.messages.filter(x=>x.state==="flagged").map(x=>`<article class="policy-alert"><div><strong>${escapeHtml(x.project)}</strong><p>${escapeHtml(x.text)}</p><small>${escapeHtml(x.time)}</small></div>${badge(x.state)}</article>`).join("")||`<div class="empty-state"><strong>No flagged messages</strong><span>No policy review is currently required.</span></div>`}</section><aside class="card panel"><div class="panel-header"><div><h2>Policy rules</h2></div></div><div class="list">${state.communicationPolicy.map(x=>`<div class="list-row policy-row"><span><strong>${escapeHtml(x.rule)}</strong><small>${escapeHtml(x.action)}</small></span>${badge(x.state)}</div>`).join("")}</div></aside></div>`;
   if(state.view==="files") return tableView(["File","Project","Scan","Availability"],state.files.map(x=>`<tr><td><strong>${escapeHtml(x.name)}</strong></td><td>${escapeHtml(x.project)}</td><td>${badge(x.scan)}</td><td>${badge(x.availability)}</td></tr>`),"<h2>Secure project files</h2><p>Downloads and uploads remain disabled.</p>");
-  if(state.view==="clients") return tableView(["Client","Primary contact","Projects","Status","Last activity"],state.clients.map(x=>`<tr><td><strong>${escapeHtml(x.name)}</strong></td><td>${escapeHtml(x.contact)}</td><td>${x.projects}</td><td>${badge(x.status)}</td><td>${escapeHtml(x.lastActivity)}</td></tr>`),"<h2>Client portfolio</h2><p>Relationship visibility for management.</p>");
+  if(state.view==="clients") return tableView(["Client","Primary contact","Projects","Status","Last activity"],state.clients.map(x=>`<tr><td><strong>${escapeHtml(x.name)}</strong></td><td>${escapeHtml(x.contact)}</td><td>${x.projects}</td><td>${badge(x.status)}</td><td>${escapeHtml(x.lastActivity)}</td></tr>`),"<h2>Client relationships</h2><p>Manager-only client visibility.</p>");
   if(state.view==="team") return teamView();
-  if(state.view==="audit") return tableView(["Event","Actor","Target","Time"],state.auditEvents.map(x=>`<tr><td><strong>${escapeHtml(x.event)}</strong></td><td>${escapeHtml(x.actor)}</td><td>${escapeHtml(x.target)}</td><td>${escapeHtml(x.time)}</td></tr>`),"<h2>Operational audit trail</h2><p>Read-only derived events.</p>");
-  if(state.view==="billing") return `<section class="card panel"><div class="empty-state"><strong>Central billing integration is not enabled</strong><span>Payment state will be integrated through the shared ecosystem payment platform.</span></div></section>`;
-  return `<section class="card panel"><div class="empty-state"><strong>${label(state.view)}</strong><span>This module boundary is reserved for a later integration phase.</span></div></section>`;
+  if(state.view==="audit") return tableView(["Event","Actor","Target","Time"],state.auditEvents.map(x=>`<tr><td><strong>${escapeHtml(x.event)}</strong></td><td>${escapeHtml(x.actor)}</td><td>${escapeHtml(x.target)}</td><td>${escapeHtml(x.time)}</td></tr>`),"<h2>Operational audit log</h2><p>Read-only security and workflow history.</p>");
+  if(state.view==="billing") return `<section class="card panel"><div class="empty-state"><strong>Billing integration is reserved</strong><span>Payments, refunds and contractor settlements remain disabled.</span></div></section>`;
+  return loadingState("Preparing this view…");
 }
 
 function render(){
   renderNav();
   title.textContent=label(state.view);
-  description.textContent=descriptions[state.view] ?? "Structured workspace module.";
+  description.textContent=descriptions[state.view]||"Role-aware workspace view.";
+  environmentPill.textContent=app.dataset.environment==="staging"?"Staging":"Production";
   content.innerHTML=renderView();
+}
+
+function resetTeamForm() {
+  const form = document.querySelector("#team-form");
+  if (!form) return;
+  form.reset();
+  document.querySelector("#team-user-id").value = "";
+  document.querySelector("#team-email").disabled = false;
+  document.querySelector("#team-status-row").hidden = true;
+  document.querySelector("#team-cancel").hidden = true;
+  document.querySelector("#team-save").textContent = "Save team member";
 }
 
 function selectedProjectIds() {
   return [...document.querySelectorAll("#team-projects option:checked")].map(option => option.value);
 }
 
-function resetTeamForm() {
-  document.querySelector("#team-form")?.reset();
-  const id = document.querySelector("#team-user-id"); if (id) id.value = "";
-  const email = document.querySelector("#team-email"); if (email) email.disabled = false;
-  const statusRow = document.querySelector("#team-status-row"); if (statusRow) statusRow.hidden = true;
-  const cancel = document.querySelector("#team-cancel"); if (cancel) cancel.hidden = true;
-}
-
 async function refreshTeam() {
-  state.teamMembers = await service.getTeam("manager");
+  state.teamMembers = await service.getTeam(state.role);
   render();
 }
 
@@ -208,10 +213,12 @@ content.addEventListener("click", event => {
     document.querySelector("#team-name").value = member.name;
     document.querySelector("#team-email").value = member.email;
     document.querySelector("#team-email").disabled = true;
-    document.querySelector("#team-status").value = member.status;
     document.querySelector("#team-status-row").hidden = false;
+    document.querySelector("#team-status").value = member.status;
+    [...document.querySelector("#team-projects").options].forEach(option => { option.selected = member.projectScopes.includes(option.value); });
     document.querySelector("#team-cancel").hidden = false;
-    document.querySelectorAll("#team-projects option").forEach(option => { option.selected = member.projectScopes.includes(option.value); });
+    document.querySelector("#team-save").textContent = "Update team member";
+    return;
   }
   if (event.target.closest("#team-cancel")) resetTeamForm();
 });
@@ -219,8 +226,8 @@ content.addEventListener("click", event => {
 content.addEventListener("submit", async event => {
   if (event.target.id !== "team-form") return;
   event.preventDefault();
-  const statusBox = document.querySelector("#team-form-status");
   const save = document.querySelector("#team-save");
+  const statusBox = document.querySelector("#team-form-status");
   save.disabled = true;
   statusBox.hidden = false;
   statusBox.textContent = "Saving team access…";
@@ -253,39 +260,32 @@ content.addEventListener("submit", async event => {
   }
 });
 
-window.addEventListener("hashchange",()=>{const key=location.hash.slice(1)||"overview";if(ROUTE_POLICY[state.role].includes(key)){state.view=key;render();}});
-nav.addEventListener("click",event=>{const link=event.target.closest("[data-view]");if(link){state.view=link.dataset.view;app.classList.remove("menu-open");render();}});
-document.querySelectorAll("[data-role]").forEach(button=>button.addEventListener("click",()=>setRole(button.dataset.role)));
+nav.addEventListener("click",event=>{const link=event.target.closest("[data-view]");if(!link)return;state.view=link.dataset.view;render();app.classList.remove("menu-open");document.querySelector("#mobile-menu-button")?.setAttribute("aria-expanded","false");});
+rolePreview.addEventListener("click",event=>{const button=event.target.closest("[data-role]");if(button)setRole(button.dataset.role);});
 search.addEventListener("input",()=>{state.query=search.value;render();});
-document.querySelector("#mobile-menu-button").addEventListener("click",event=>{const open=app.classList.toggle("menu-open");event.currentTarget.setAttribute("aria-expanded",String(open));});
+window.addEventListener("hashchange",()=>{const next=location.hash.slice(1);if(ROUTE_POLICY[state.role]?.includes(next)){state.view=next;render();}});
+document.querySelector("#mobile-menu-button")?.addEventListener("click",()=>{const open=app.classList.toggle("menu-open");document.querySelector("#mobile-menu-button")?.setAttribute("aria-expanded",String(open));});
 
-async function initialise() {
-  if (!FEATURE_FLAGS.authentication) {
-    await setRole("manager");
-    return;
-  }
-
-  rolePreview.hidden = true;
-  app.classList.add("authenticated-workspace");
-  try {
-    const actor = await service.getActor();
-    if (!ROUTE_POLICY[actor.role]) throw new Error("Unsupported authenticated role");
-    state.actor = actor;
-    state.role = actor.role;
-    environmentPill.textContent = actor.role === "manager" ? "Manager Workspace" : actor.role === "team_member" ? "Team Workspace" : "Client Workspace";
-    if (!ROUTE_POLICY[state.role].includes(state.view)) state.view = "overview";
-    history.replaceState(null, "",`#${state.view}`);
-    await loadRoleData(state.role, actor);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Authentication required";
-    if (message.toLowerCase().includes("authentication required")) {
-      location.replace("../workspace-access.html");
+async function bootstrap() {
+  if (FEATURE_FLAGS.authentication) {
+    rolePreview.hidden = true;
+    try {
+      const actor = await service.getActor();
+      if (!ROUTE_POLICY[actor.role]) throw new Error("This account does not have a supported Digital Den role.");
+      state.role = actor.role;
+      const allowed = ROUTE_POLICY[state.role];
+      if (!allowed.includes(state.view)) state.view = "overview";
+      history.replaceState(null, "", `#${state.view}`);
+      await loadRoleData(state.role, actor);
+      app.classList.add("authenticated-workspace");
+      return;
+    } catch (error) {
+      location.replace("../workspace-access.html?reason=session");
       return;
     }
-    state.error = error instanceof Error ? error : new Error("Unable to initialise authenticated workspace");
-    state.loading = false;
-    render();
   }
+
+  await setRole("manager");
 }
 
-initialise();
+bootstrap();
