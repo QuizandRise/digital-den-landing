@@ -43,7 +43,20 @@ function projectFromCard(card) {
   const status = card.querySelector(".badge")?.textContent?.trim() || "draft";
   const metaRows = card.querySelectorAll(".meta");
   const updated = metaRows.length > 1 ? metaRows[metaRows.length - 1].textContent.trim() : "Update information unavailable";
-  return { id, title: heading, service, progress, status, updated };
+  return {
+    id,
+    title: heading,
+    service,
+    progress,
+    status,
+    updated,
+    client: "Not recorded",
+    brief: "No project brief is currently exposed by the workspace API.",
+    assignedTeam: "Not assigned",
+    deadline: "Not recorded",
+    budget: "Not recorded",
+    priority: "Normal",
+  };
 }
 
 function saveProject(project) {
@@ -67,22 +80,72 @@ function reservedPanel(titleText, message) {
   return `<section class="card panel project-workspace-panel"><div class="empty-state"><strong>${escapeHtml(titleText)}</strong><span>${escapeHtml(message)}</span></div></section>`;
 }
 
+function infoRow(label, value, tone = "neutral") {
+  return `<div class="list-row"><span><strong>${escapeHtml(label)}</strong><small>${escapeHtml(value)}</small></span><span class="pill ${tone}">${value === "Not recorded" || value === "Not assigned" ? "Pending" : "Available"}</span></div>`;
+}
+
+function quickAction(project, tab, label) {
+  return `<a class="button secondary project-quick-action" href="#${projectRoute(project.id, tab)}">${escapeHtml(label)}</a>`;
+}
+
 function overviewPanel(project) {
-  return `<div class="project-workspace-grid">
+  const currentStage = project.status.replaceAll("_", " ");
+  const recentActivity = project.updated || "No recent activity recorded";
+  return `<div class="project-workspace-grid project-overview-metrics">
     <section class="card panel project-workspace-panel">
       <small>Progress</small>
       <div class="project-workspace-progress"><strong>${project.progress}%</strong><span>complete</span></div>
       <div class="progress" aria-label="${project.progress}% complete"><span style="width:${Math.max(0, Math.min(100, project.progress))}%"></span></div>
     </section>
-    <section class="card panel project-workspace-panel"><small>Service</small><h3>${escapeHtml(project.service)}</h3><p class="meta">Project delivery category</p></section>
-    <section class="card panel project-workspace-panel"><small>Status</small><h3>${escapeHtml(project.status)}</h3><p class="meta">${escapeHtml(project.updated)}</p></section>
+    <section class="card panel project-workspace-panel"><small>Current stage</small><h3>${escapeHtml(currentStage)}</h3><p class="meta">Project workflow status</p></section>
+    <section class="card panel project-workspace-panel"><small>Priority</small><h3>${escapeHtml(project.priority)}</h3><p class="meta">Default until a manager records a value</p></section>
   </div>
+
+  <div class="project-overview-columns">
+    <section class="card panel project-workspace-panel">
+      <div class="panel-header"><div><h2>Project brief</h2><p>Core client and delivery information currently available to this workspace.</p></div></div>
+      <div class="project-brief-block">
+        <span class="meta">Client</span>
+        <strong>${escapeHtml(project.client)}</strong>
+      </div>
+      <div class="project-brief-block">
+        <span class="meta">Service</span>
+        <strong>${escapeHtml(project.service)}</strong>
+      </div>
+      <div class="project-brief-block">
+        <span class="meta">Brief</span>
+        <p>${escapeHtml(project.brief)}</p>
+      </div>
+    </section>
+
+    <section class="card panel project-workspace-panel">
+      <div class="panel-header"><div><h2>Delivery controls</h2><p>Manager-visible operational fields for this project.</p></div></div>
+      <div class="list">
+        ${infoRow("Assigned team", project.assignedTeam)}
+        ${infoRow("Deadline", project.deadline)}
+        ${infoRow("Budget", project.budget)}
+        ${infoRow("Last update", recentActivity)}
+      </div>
+    </section>
+  </div>
+
   <section class="card panel project-workspace-panel">
-    <div class="panel-header"><div><h2>Project command centre</h2><p>This first safe version establishes the dedicated project boundary without changing authentication, API contracts or write operations.</p></div></div>
+    <div class="panel-header"><div><h2>Quick actions</h2><p>Safe navigation only. No new write operation is enabled in this release.</p></div></div>
+    <div class="project-quick-actions">
+      ${quickAction(project, "messages", "Open messages")}
+      ${quickAction(project, "files", "Open files")}
+      ${quickAction(project, "disputes", "Open disputes")}
+      <a class="button secondary project-quick-action" href="#team">Assign team member</a>
+      <a class="button secondary project-quick-action" href="#clients">View client area</a>
+    </div>
+  </section>
+
+  <section class="card panel project-workspace-panel">
+    <div class="panel-header"><div><h2>Recent activity</h2><p>Latest project event currently exposed by the workspace.</p></div></div>
     <div class="list">
+      <div class="list-row"><span><strong>Project status updated</strong><small>${escapeHtml(recentActivity)}</small></span><span class="pill neutral">${escapeHtml(currentStage)}</span></div>
       <div class="list-row"><span><strong>Project identity</strong><small>${escapeHtml(project.id)}</small></span><span class="pill neutral">Connected</span></div>
       <div class="list-row"><span><strong>Role-scoped access</strong><small>Inherited from the authenticated workspace</small></span><span class="pill neutral">Active</span></div>
-      <div class="list-row"><span><strong>Project mutations</strong><small>No new write operations in this release</small></span><span class="pill neutral">Controlled</span></div>
     </div>
   </section>`;
 }
@@ -173,7 +236,6 @@ window.addEventListener("load", () => {
   }
 });
 
-// Bounded retries cover the asynchronous initial dashboard render without observing the whole DOM.
 [400, 900, 1600, 2600].forEach(delay => window.setTimeout(() => {
   if (!parseProjectRoute()) prepareCards();
 }, delay));
