@@ -34,7 +34,8 @@ function parseProjectRoute() {
   };
 }
 
-function projectListRoute() {
+function projectListRoute(project) {
+  if (["assigned_work", "projects"].includes(project?.returnRoute)) return project.returnRoute;
   const roleLabel = document.querySelector("#actor-role")?.textContent?.toLowerCase() || "";
   const workspacePill = document.querySelector("#environment-pill")?.textContent?.toLowerCase() || "";
   return roleLabel.includes("team") || workspacePill.includes("team") ? "assigned_work" : "projects";
@@ -171,7 +172,7 @@ function renderProjectWorkspace() {
   if (!route || !content) return false;
 
   const project = loadProject(route.projectId);
-  const returnRoute = projectListRoute();
+  const returnRoute = projectListRoute(project);
   title.textContent = project?.title || "Project Workspace";
   description.textContent = "Role-scoped project delivery command centre.";
 
@@ -201,6 +202,7 @@ function renderProjectWorkspace() {
 function openProject(card) {
   const project = projectFromCard(card);
   if (!project.id) return;
+  project.returnRoute = currentRoute() === "assigned_work" ? "assigned_work" : "projects";
   saveProject(project);
   location.hash = projectRoute(project.id);
 }
