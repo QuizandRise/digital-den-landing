@@ -34,6 +34,12 @@ function parseProjectRoute() {
   };
 }
 
+function projectListRoute() {
+  const roleLabel = document.querySelector("#actor-role")?.textContent?.toLowerCase() || "";
+  const workspacePill = document.querySelector("#environment-pill")?.textContent?.toLowerCase() || "";
+  return roleLabel.includes("team") || workspacePill.includes("team") ? "assigned_work" : "projects";
+}
+
 function projectFromCard(card) {
   const heading = card.querySelector("h3")?.textContent?.trim() || "Digital Den project";
   const meta = card.querySelector(".meta")?.textContent?.trim() || "";
@@ -165,17 +171,18 @@ function renderProjectWorkspace() {
   if (!route || !content) return false;
 
   const project = loadProject(route.projectId);
+  const returnRoute = projectListRoute();
   title.textContent = project?.title || "Project Workspace";
   description.textContent = "Role-scoped project delivery command centre.";
 
   if (!project) {
-    content.innerHTML = `<section class="card panel"><div class="empty-state"><strong>Project context is unavailable</strong><span>Return to Projects and open the project again.</span><a class="button primary" href="#projects">Return to projects</a></div></section>`;
+    content.innerHTML = `<section class="card panel"><div class="empty-state"><strong>Project context is unavailable</strong><span>Return to your project list and open the project again.</span><a class="button primary" href="#${returnRoute}">Return to project list</a></div></section>`;
     return true;
   }
 
   content.innerHTML = `<div class="project-workspace-shell">
     <header class="card panel project-workspace-header">
-      <div><a class="project-workspace-back" href="#projects">← Back to projects</a><p class="eyebrow">Project Workspace</p><h2>${escapeHtml(project.title)}</h2><p>${escapeHtml(project.id)} · ${escapeHtml(project.service)}</p></div>
+      <div><a class="project-workspace-back" href="#${returnRoute}">← Back to projects</a><p class="eyebrow">Project Workspace</p><h2>${escapeHtml(project.title)}</h2><p>${escapeHtml(project.id)} · ${escapeHtml(project.service)}</p></div>
       <span class="badge cyan">${escapeHtml(project.status)}</span>
     </header>
     <nav class="project-workspace-tabs" aria-label="Project workspace sections">
