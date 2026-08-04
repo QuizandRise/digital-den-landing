@@ -47,7 +47,7 @@ async function requestJson(path, { signal, method = "GET", body, intent } = {}) 
 
 function mapActor(actor) {
   const role = actor?.role ?? "client";
-  const label = role === "manager" ? "Manager" : role === "team_member" ? "Team member" : "Client";
+  const label = role === "manager" ? "Manager" : role === "team_member" ? "Professional" : "Client";
   return {
     ...actor,
     name: label,
