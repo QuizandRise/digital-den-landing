@@ -26,8 +26,8 @@ export const API_CONFIG = Object.freeze({
 });
 
 export const ROUTE_POLICY = Object.freeze({
-  manager: ["overview", "projects", "review", "messages", "communication_control", "clients", "team", "disputes", "audit"],
-  team_member: ["overview", "assigned_work", "messages", "files", "disputes"],
+  manager: ["overview", "projects", "review", "messages", "communication_control", "clients", "team", "disputes", "financials", "audit"],
+  team_member: ["overview", "assigned_work", "messages", "files", "disputes", "earnings"],
   client: ["overview", "projects", "messages", "files", "disputes", "billing"],
 });
 
@@ -36,4 +36,5 @@ export const NAVIGATION = Object.freeze({
   messages: ["◌", "Messages"], communication_control: ["⌁", "Communication control"],
   clients: ["♙", "Clients"], team: ["♧", "Team"], disputes: ["⚖", "Disputes"], audit: ["▤", "Audit log"],
   assigned_work: ["◆", "Assigned work"], files: ["▱", "Files"], billing: ["£", "Billing"],
+  financials: ["£", "Financials"], earnings: ["£", "Earnings"],
 });

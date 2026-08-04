@@ -75,21 +75,24 @@ function noPermissionMarkup() {
 async function injectComposer() {
   if (location.hash !== "#messages") return;
   const content = document.querySelector("#workspace-content");
-  if (!content || content.querySelector("#message-composer")) return;
+  const slot = content?.querySelector("#message-capability-slot");
+  if (!slot || slot.dataset.ready === "true") return;
+  slot.dataset.ready = "true";
 
   try {
     await loadContext();
   } catch {
+    slot.dataset.ready = "false";
     return;
   }
 
   if (!actor || !["client", "manager", "team_member"].includes(actor.role)) return;
   if (!projects.length) {
-    if (actor.role === "team_member") content.insertAdjacentHTML("afterbegin", noPermissionMarkup());
+    if (actor.role === "team_member") slot.innerHTML = noPermissionMarkup();
     return;
   }
 
-  content.insertAdjacentHTML("afterbegin", composerMarkup());
+  slot.innerHTML = composerMarkup();
 
   const form = content.querySelector("#message-form");
   const body = content.querySelector("#message-body");

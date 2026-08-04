@@ -1,6 +1,9 @@
 import { FEATURE_FLAGS, ROUTE_POLICY, NAVIGATION } from "./config.js";
 import { createDashboardService } from "./services/dashboard-service.js";
 import { attachTeamInvitationActions, teamInviteStatusPanel, teamMemberActions } from "./team-invite-actions.js";
+import { PLATFORM_CONFIG, ROLE_CAPABILITIES, roleLabel } from "./platform-config.js";
+import { FINANCIAL_FIELDS, financialValue, normalizeFinancialRecord } from "./financial-contract.js";
+import { presentMessageForRole } from "./message-presentation.js";
 
 const service = createDashboardService();
 const state = {
@@ -29,12 +32,14 @@ const description = document.querySelector("#view-description");
 const search = document.querySelector("#global-search");
 const rolePreview = document.querySelector(".role-preview");
 const environmentPill = document.querySelector("#environment-pill");
+const newProjectButton = document.querySelector("#new-project-button");
 
 const descriptions = {
   overview:"Role-scoped project delivery visibility.", projects:"Projects visible within the current actor scope.",
   review:"Manager-controlled approval queue.", messages:"Authorised project conversations.", communication_control:"Communication policy, moderation rules and flagged-item visibility.",
   clients:"Client relationships, project load and recent activity.", team:"Invite team members and control project access.", audit:"Read-only operational history.",
-  assigned_work:"Workstreams assigned to this team member.", files:"Scanned project files available to this role.", billing:"Payment-state placeholder for future central integration.",
+  assigned_work:"Workstreams assigned to this professional.", files:"Project files available to this role.", billing:"Read-only client billing visibility.",
+  financials:"Read-only organisational financial visibility.", earnings:"Read-only professional earnings visibility.",
 };
 
 const label = key => NAVIGATION[key]?.[1] ?? key.replaceAll("_", " ");
@@ -57,7 +62,9 @@ function setIdentity(actor) {
   if (!actor) return;
   document.querySelector("#actor-name").textContent = actor.name;
   document.querySelector("#actor-avatar").textContent = actor.initials;
-  document.querySelector("#actor-role").textContent = actor.label;
+  const resolvedRole = actor.role || state.role;
+  document.querySelector("#actor-role").textContent = roleLabel(resolvedRole);
+  app.dataset.actorRole = resolvedRole;
 }
 
 async function loadRoleData(role, actorOverride = null) {
@@ -103,6 +110,12 @@ function renderNav(){
   nav.innerHTML=ROUTE_POLICY[state.role].map(key=>`<a class="nav-link ${state.view===key?"active":""}" href="#${key}" data-view="${key}"><span aria-hidden="true">${NAVIGATION[key][0]}</span><span>${NAVIGATION[key][1]}</span></a>`).join("");
 }
 
+function professionalOverview(){
+  const activeCount = state.projects.filter(project => !["delivered", "cancelled"].includes(project.status)).length;
+  const latest = state.projects[0]?.updated || "Not available";
+  return `<div class="stats-grid"><div class="card stat-card"><small>Assigned projects</small><strong>${state.projects.length}</strong><em>Project scoped</em></div><div class="card stat-card"><small>Active work</small><strong>${activeCount}</strong><em>Assigned delivery</em></div><div class="card stat-card"><small>Messages</small><strong>${state.messages.length}</strong><em>Project scoped</em></div><div class="card stat-card"><small>Files</small><strong>${state.files.length}</strong><em>Available to you</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Assigned work activity</h2><p>Your current Digital Den network workstreams inside ${PLATFORM_CONFIG.platformName}.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>Professional status</h2><p>Operational information for your assigned work.</p></div></div><div class="list"><div class="list-row"><span><strong>Recent project activity</strong><small>${escapeHtml(latest)}</small></span><span class="pill neutral">Available</span></div><div class="list-row"><span><strong>Messages and files</strong><small>Limited to assigned project scopes</small></span><span class="pill neutral">Scoped</span></div><div class="list-row"><span><strong>Earnings connection</strong><small>Payment integration is not enabled</small></span><span class="pill neutral">Pending integration</span></div></div></aside></div>`;
+}
+
 function visibleProjects(){
   const q=state.query.trim().toLowerCase();
   if(!q) return state.projects;
@@ -117,12 +130,40 @@ function projectCards(){
 
 function overview(){
   const readyCount = state.projects.filter(x=>["ready_for_delivery","delivered"].includes(x.status)).length;
+  if(state.role === "team_member") return professionalOverview();
   if(state.role === "client") {
     return `<div class="stats-grid"><div class="card stat-card"><small>Your projects</small><strong>${state.projects.length}</strong><em>Securely scoped</em></div><div class="card stat-card"><small>Project messages</small><strong>${state.messages.length}</strong><em>Read-only visibility</em></div><div class="card stat-card"><small>Available files</small><strong>${state.files.length}</strong><em>Project scoped</em></div><div class="card stat-card"><small>Ready to deliver</small><strong>${readyCount}</strong><em>Delivery status</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Your Digital Den projects</h2><p>Only projects linked to your verified email are visible.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>Secure access</h2><p>Authenticated client workspace.</p></div></div><div class="list"><div class="list-row"><span><strong>Live project data</strong><small>Read from Digital Den API</small></span><span class="pill neutral">On</span></div><div class="list-row"><span><strong>Client session</strong><small>HTTP-only secure session</small></span><span class="pill neutral">Active</span></div><div class="list-row"><span><strong>Write operations</strong><small>Updates and payments</small></span><span class="pill neutral">Off</span></div></div><div class="notice" style="margin-top:14px">Your workspace is connected securely to your Digital Den project records.</div></aside></div>`;
   }
 
   const flagged = state.overview?.flaggedMessageCount ?? 0;
   return `<div class="stats-grid"><div class="card stat-card"><small>Visible projects</small><strong>${state.projects.length}</strong><em>Role scoped</em></div><div class="card stat-card"><small>Awaiting review</small><strong>${state.role==="manager"?state.reviews.length:"—"}</strong><em>${state.role==="manager"?"Manager action required":"Not in this role"}</em></div><div class="card stat-card"><small>Ready to deliver</small><strong>${readyCount}</strong><em>All checks passed</em></div><div class="card stat-card"><small>Flagged messages</small><strong>${state.role==="manager"?flagged:"—"}</strong><em>Policy controlled</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Current projects</h2><p>Read through the isolated dashboard service.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>System state</h2><p>Authenticated production workspace.</p></div></div><div class="list"><div class="list-row"><span><strong>Live API</strong><small>External data connection</small></span><span class="pill neutral">${FEATURE_FLAGS.liveApi?"On":"Off"}</span></div><div class="list-row"><span><strong>Authentication</strong><small>Real session enforcement</small></span><span class="pill neutral">${FEATURE_FLAGS.authentication?"On":"Off"}</span></div><div class="list-row"><span><strong>Mutations</strong><small>Controlled operations</small></span><span class="pill neutral">${FEATURE_FLAGS.projectMutations?"On":"Off"}</span></div></div></aside></div>`;
+}
+
+function messagesView(){
+  const rows = state.messages.map(message => presentMessageForRole(message, state.role)).map(x=>`<tr><td><strong>${escapeHtml(x.project)}</strong></td><td>${escapeHtml(x.from)}</td><td>${escapeHtml(x.text)}</td><td>${escapeHtml(x.time)}</td><td>${badge(x.state)}</td></tr>`);
+  const list = rows.length ? tableView(["Project","Sender","Message","Time","State"], rows, "<h2>Project conversations</h2><p>Messages visible within your authorised project scope.</p>") : "";
+  return `<div id="message-capability-slot"></div>${list || `<section class="card panel"><div class="empty-state"><strong>No project messages</strong><span>No messages are currently available in your project scope.</span></div></section>`}`;
+}
+
+function filesView(){
+  const rows = state.files.map(file => `<tr><td><strong>${escapeHtml(file.name)}</strong></td><td>${escapeHtml(file.project)}</td><td>${badge(file.scan)}</td><td>${badge(file.availability)}</td></tr>`);
+  const fallback = tableView(["File","Project","Scan","Availability"], rows, "<h2>Project files</h2><p>Files currently available within your authorised project scope.</p>");
+  return `<div id="file-upload-slot"></div><div id="file-security-slot">${fallback}</div>`;
+}
+
+const FINANCIAL_LABELS = {
+  contractValue:"Contract value", clientPaid:"Client paid", clientOutstanding:"Client outstanding", platformFee:"Platform fee",
+  professionalAllocation:"Assigned earnings", approvedMilestoneEarnings:"Approved milestone earnings", professionalPaid:"Paid earnings",
+  professionalOutstanding:"Pending earnings", heldAmount:"Held amount", refundAmount:"Refund status", paymentStatus:"Payment status",
+  settlementStatus:"Settlement status", settlementHistory:"Settlement history", invoiceStatus:"Invoice status", nextSettlementDate:"Next settlement date",
+  milestones:"Payment milestones", receipts:"Receipts",
+};
+
+function financialView(){
+  const record = normalizeFinancialRecord();
+  const fields = FINANCIAL_FIELDS[state.role] || [];
+  const heading = state.role === "manager" ? "Financials" : state.role === "client" ? "Billing" : "Earnings";
+  return `<section class="card panel"><div class="panel-header"><div><h2>${heading}</h2><p>Read-only visibility architecture. Payments and settlements are not connected.</p></div><span class="pill neutral">Pending integration</span></div><div class="financial-grid">${fields.map(field => `<div class="financial-field"><small>${FINANCIAL_LABELS[field]}</small><strong>${escapeHtml(financialValue(record[field]))}</strong></div>`).join("")}</div><div class="notice">No payment, refund, invoice or payout action is enabled from this workspace.</div></section>`;
 }
 
 function tableView(headers, rows, intro=""){
@@ -163,17 +204,19 @@ function renderView(){
   if(state.view==="overview") return overview();
   if(state.view==="projects"||state.view==="assigned_work") return `<section class="card panel"><div class="panel-header"><div><h2>${label(state.view)}</h2><p>Authenticated project view.</p></div></div>${projectCards()}</section>`;
   if(state.view==="review") return tableView(["Project","Submission","Owner","Waiting","Priority"],state.reviews.map(x=>`<tr><td><strong>${escapeHtml(x.project)}</strong></td><td>${escapeHtml(x.item)}</td><td>${escapeHtml(x.owner)}</td><td>${escapeHtml(x.age)}</td><td>${badge(x.priority)}</td></tr>`),"<h2>Items requiring manager decision</h2><p>No approval action is enabled yet.</p>");
-  if(state.view==="messages") return tableView(["Project","Sender","Message","Time","State"],state.messages.map(x=>`<tr><td><strong>${escapeHtml(x.project)}</strong></td><td>${escapeHtml(x.from)}</td><td>${escapeHtml(x.text)}</td><td>${escapeHtml(x.time)}</td><td>${badge(x.state)}</td></tr>`),"<h2>Project conversations</h2><p>Read-only message visibility for the authenticated role.</p>");
+  if(state.view==="messages") return messagesView();
   if(state.view==="communication_control") return `<div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Flagged communications</h2><p>Messages requiring policy review.</p></div></div>${state.messages.filter(x=>x.state==="flagged").map(x=>`<article class="policy-alert"><div><strong>${escapeHtml(x.project)}</strong><p>${escapeHtml(x.text)}</p><small>${escapeHtml(x.time)}</small></div>${badge(x.state)}</article>`).join("")||`<div class="empty-state"><strong>No flagged messages</strong><span>No policy review is currently required.</span></div>`}</section><aside class="card panel"><div class="panel-header"><div><h2>Policy rules</h2></div></div><div class="list">${state.communicationPolicy.map(x=>`<div class="list-row policy-row"><span><strong>${escapeHtml(x.rule)}</strong><small>${escapeHtml(x.action)}</small></span>${badge(x.state)}</div>`).join("")}</div></aside></div>`;
-  if(state.view==="files") return tableView(["File","Project","Scan","Availability"],state.files.map(x=>`<tr><td><strong>${escapeHtml(x.name)}</strong></td><td>${escapeHtml(x.project)}</td><td>${badge(x.scan)}</td><td>${badge(x.availability)}</td></tr>`),"<h2>Secure project files</h2><p>Downloads and uploads remain disabled.</p>");
+  if(state.view==="files") return filesView();
   if(state.view==="clients") return tableView(["Client","Primary contact","Projects","Status","Last activity"],state.clients.map(x=>`<tr><td><strong>${escapeHtml(x.name)}</strong></td><td>${escapeHtml(x.contact)}</td><td>${x.projects}</td><td>${badge(x.status)}</td><td>${escapeHtml(x.lastActivity)}</td></tr>`),"<h2>Client portfolio</h2><p>Relationship visibility for management.</p>");
   if(state.view==="team") return teamView();
   if(state.view==="audit") return tableView(["Event","Actor","Target","Time"],state.auditEvents.map(x=>`<tr><td><strong>${escapeHtml(x.event)}</strong></td><td>${escapeHtml(x.actor)}</td><td>${escapeHtml(x.target)}</td><td>${escapeHtml(x.time)}</td></tr>`),"<h2>Operational audit trail</h2><p>Read-only derived events.</p>");
-  if(state.view==="billing") return `<section class="card panel"><div class="empty-state"><strong>Central billing integration is not enabled</strong><span>Payment state will be integrated through the shared ecosystem payment platform.</span></div></section>`;
+  if(["financials","billing","earnings"].includes(state.view)) return financialView();
   return `<section class="card panel"><div class="empty-state"><strong>${label(state.view)}</strong><span>This module boundary is reserved for a later integration phase.</span></div></section>`;
 }
 
 function render(){
+  app.dataset.actorRole=state.role;
+  newProjectButton.hidden=!ROLE_CAPABILITIES[state.role]?.startProject;
   renderNav();
   title.textContent=label(state.view);
   description.textContent=descriptions[state.view] ?? "Structured workspace module.";

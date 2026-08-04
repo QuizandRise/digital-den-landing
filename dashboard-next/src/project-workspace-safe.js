@@ -1,9 +1,15 @@
+import { ROLE_CAPABILITIES } from "./platform-config.js";
+
 const content = document.querySelector("#workspace-content");
 const title = document.querySelector("#view-title");
 const description = document.querySelector("#view-description");
 
 const STORAGE_KEY = "digitalDen:selectedProject";
 const PROJECT_ROUTE_PREFIX = "project/";
+
+function actorRole() {
+  return document.querySelector("#app")?.dataset.actorRole || "client";
+}
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -36,9 +42,7 @@ function parseProjectRoute() {
 
 function projectListRoute(project) {
   if (["assigned_work", "projects"].includes(project?.returnRoute)) return project.returnRoute;
-  const roleLabel = document.querySelector("#actor-role")?.textContent?.toLowerCase() || "";
-  const workspacePill = document.querySelector("#environment-pill")?.textContent?.toLowerCase() || "";
-  return roleLabel.includes("team") || workspacePill.includes("team") ? "assigned_work" : "projects";
+  return actorRole() === "team_member" ? "assigned_work" : "projects";
 }
 
 function projectFromCard(card) {
@@ -96,6 +100,7 @@ function quickAction(project, tab, label) {
 }
 
 function overviewPanel(project) {
+  const role = actorRole();
   const currentStage = project.status.replaceAll("_", " ");
   const recentActivity = project.updated || "No recent activity recorded";
   return `<div class="project-workspace-grid project-overview-metrics">
@@ -111,10 +116,10 @@ function overviewPanel(project) {
   <div class="project-overview-columns">
     <section class="card panel project-workspace-panel">
       <div class="panel-header"><div><h2>Project brief</h2><p>Core client and delivery information currently available to this workspace.</p></div></div>
-      <div class="project-brief-block">
+      ${role === "manager" ? `<div class="project-brief-block">
         <span class="meta">Client</span>
         <strong>${escapeHtml(project.client)}</strong>
-      </div>
+      </div>` : ""}
       <div class="project-brief-block">
         <span class="meta">Service</span>
         <strong>${escapeHtml(project.service)}</strong>
@@ -125,7 +130,7 @@ function overviewPanel(project) {
       </div>
     </section>
 
-    <section class="card panel project-workspace-panel">
+    ${role === "manager" ? `<section class="card panel project-workspace-panel">
       <div class="panel-header"><div><h2>Delivery controls</h2><p>Manager-visible operational fields for this project.</p></div></div>
       <div class="list">
         ${infoRow("Assigned team", project.assignedTeam)}
@@ -133,7 +138,7 @@ function overviewPanel(project) {
         ${infoRow("Budget", project.budget)}
         ${infoRow("Last update", recentActivity)}
       </div>
-    </section>
+    </section>` : `<section class="card panel project-workspace-panel"><div class="panel-header"><div><h2>Delivery information</h2><p>Information available within your project scope.</p></div></div><div class="list">${infoRow("Last update", recentActivity)}</div></section>`}
   </div>
 
   <section class="card panel project-workspace-panel">
@@ -142,8 +147,7 @@ function overviewPanel(project) {
       ${quickAction(project, "messages", "Open messages")}
       ${quickAction(project, "files", "Open files")}
       ${quickAction(project, "disputes", "Open disputes")}
-      <a class="button secondary project-quick-action" href="#team">Assign team member</a>
-      <a class="button secondary project-quick-action" href="#clients">View client area</a>
+      ${role === "manager" ? `<a class="button secondary project-quick-action" href="#team">Assign professional</a><a class="button secondary project-quick-action" href="#clients">View client area</a>` : ""}
     </div>
   </section>
 
@@ -172,6 +176,8 @@ function renderProjectWorkspace() {
   if (!route || !content) return false;
 
   const project = loadProject(route.projectId);
+  const canViewProjectAudit = Boolean(ROLE_CAPABILITIES[actorRole()]?.viewProjectAudit);
+  const visibleTab = route.tab === "audit" && !canViewProjectAudit ? "overview" : route.tab;
   const returnRoute = projectListRoute(project);
   title.textContent = project?.title || "Project Workspace";
   description.textContent = "Role-scoped project delivery command centre.";
@@ -187,14 +193,14 @@ function renderProjectWorkspace() {
       <span class="badge cyan">${escapeHtml(project.status)}</span>
     </header>
     <nav class="project-workspace-tabs" aria-label="Project workspace sections">
-      ${tabLink(project, "overview", "Overview", route.tab)}
-      ${tabLink(project, "messages", "Messages", route.tab)}
-      ${tabLink(project, "files", "Files", route.tab)}
-      ${tabLink(project, "disputes", "Disputes", route.tab)}
-      ${tabLink(project, "billing", "Billing", route.tab)}
-      ${tabLink(project, "audit", "Audit log", route.tab)}
+      ${tabLink(project, "overview", "Overview", visibleTab)}
+      ${tabLink(project, "messages", "Messages", visibleTab)}
+      ${tabLink(project, "files", "Files", visibleTab)}
+      ${tabLink(project, "disputes", "Disputes", visibleTab)}
+      ${tabLink(project, "billing", "Billing", visibleTab)}
+      ${canViewProjectAudit ? tabLink(project, "audit", "Audit log", visibleTab) : ""}
     </nav>
-    <div class="project-workspace-content">${panelForTab(project, route.tab)}</div>
+    <div class="project-workspace-content">${panelForTab(project, visibleTab)}</div>
   </div>`;
   return true;
 }
@@ -244,6 +250,10 @@ window.addEventListener("load", () => {
     window.setTimeout(prepareCards, 1200);
   }
 });
+
+new MutationObserver(() => {
+  if (!parseProjectRoute()) prepareCards();
+}).observe(content, { childList: true, subtree: true });
 
 [400, 900, 1600, 2600].forEach(delay => window.setTimeout(() => {
   if (!parseProjectRoute()) prepareCards();
