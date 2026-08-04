@@ -56,24 +56,25 @@ async function loadContext() {
 }
 
 function createCaseForm(context) {
+  const isManager = context.actor.role === "manager";
   const projectOptions = context.projects.map(project =>
     `<option value="${escapeHtml(project.projectId)}">${escapeHtml(project.title || project.projectId)}</option>`
   ).join("");
-  const managerFields = context.actor.role === "manager" ? `
+  const managerFields = isManager ? `
     <label><strong>Contractor actor ID</strong><input name="contractorActorId" placeholder="team_member:…"></label>
     <label><strong>Contractor type</strong><select name="contractorType"><option value="unassigned">Unassigned</option><option value="employee">Employee</option><option value="contractor">Contractor</option></select></label>
     <label><strong>Contract scope summary</strong><textarea name="scopeSummary" rows="3"></textarea></label>
     <label><strong>Quality criteria</strong><textarea name="qualityCriteria" rows="3"></textarea></label>
     <label><strong>Delivery deadline</strong><input name="deliveryDeadline" type="date"></label>` : "";
   return `<section class="card panel" style="margin-bottom:18px">
-    <div class="panel-header"><div><h2>Open a dispute case</h2><p>Opening a case immediately pauses automatic completion, contractor payment release and project timeouts.</p></div></div>
+    <div class="panel-header"><div><h2>${isManager ? "Open a dispute case" : "Submit a dispute request"}</h2><p>${isManager ? "Administrative case controls apply the supported operational safeguards." : "Your request will be sent to a manager for review. You cannot apply payment, completion or timeout controls from this workspace."}</p></div></div>
     <form id="dispute-create-form" class="list" style="gap:12px">
       <label><strong>Project</strong><select name="projectId" required>${projectOptions}</select></label>
       <label><strong>Reason</strong><select name="reasonCode" required>${REASONS.map(([v,l])=>`<option value="${v}">${l}</option>`).join("")}</select></label>
       <label><strong>Summary</strong><textarea name="summary" rows="4" maxlength="3000" required placeholder="Explain the issue factually."></textarea></label>
       <label><strong>Your claim or requested outcome</strong><textarea name="claim" rows="4" maxlength="5000"></textarea></label>
       ${managerFields}
-      <div><button class="button primary" type="submit">Open case and apply holds</button></div>
+      <div><button class="button primary" type="submit">${isManager ? "Open administrative case" : "Submit request for review"}</button></div>
       <div id="dispute-create-status" class="notice" hidden></div>
     </form>
   </section>`;
@@ -189,12 +190,12 @@ function caseCard(dispute, role) {
     : `<p><strong>Your claim:</strong> ${escapeHtml(role === "client" ? dispute.clientClaim : dispute.contractorClaim || "—")}</p>`;
   return `<article class="card panel dispute-case" data-case-id="${escapeHtml(dispute.caseId)}" style="margin-bottom:18px">
     <div class="panel-header"><div><p class="eyebrow">${escapeHtml(dispute.caseNumber)}</p><h2>${escapeHtml(dispute.projectTitle)}</h2><p>${escapeHtml(dispute.summary)}</p></div>${badge(dispute.status)}</div>
-    <div class="stats-grid">
+    ${role === "manager" ? `<div class="stats-grid">
       <div class="card stat-card"><small>Completion hold</small><strong>${holdsActive ? "ON" : "Released"}</strong></div>
       <div class="card stat-card"><small>Contractor payment</small><strong>${holdsActive ? "HELD" : "Shadow calculated"}</strong></div>
       <div class="card stat-card"><small>Timeout</small><strong>${holdsActive ? "PAUSED" : "Active"}</strong></div>
       <div class="card stat-card"><small>Response deadline</small><strong style="font-size:14px">${dateLabel(dispute.responseDeadline)}</strong></div>
-    </div>
+    </div>` : `<div class="notice">This dispute is managed by Digital Den. Any operational or financial safeguards are applied only by authorised administrators.</div>`}
     <div class="content-grid" style="margin-top:16px">
       <section class="card panel"><h3>Contract and claims</h3><p><strong>Reason:</strong> ${escapeHtml(dispute.reasonCode.replaceAll("_", " "))}</p>${claim}<p><strong>Scope:</strong> ${escapeHtml(dispute.contractSnapshot?.scopeSummary || "Not recorded")}</p><p><strong>Quality criteria:</strong> ${escapeHtml(dispute.contractSnapshot?.qualityCriteria || "Not recorded")}</p></section>
       <section class="card panel"><h3>Current remedy</h3><p><strong>${escapeHtml((dispute.proposedRemedy || "Not proposed").replaceAll("_", " "))}</strong></p><p>${escapeHtml(dispute.remedyRationale || "No remedy has been proposed yet.")}</p><p><strong>Final decision:</strong> ${escapeHtml(dispute.finalDecision || "Pending")}</p></section>
@@ -224,11 +225,12 @@ async function mutate(form, extra = {}) {
 function bind(content) {
   content.querySelector("#dispute-create-form")?.addEventListener("submit", async event => {
     event.preventDefault(); const form = event.currentTarget; const status = form.querySelector("#dispute-create-status");
-    status.hidden = false; status.textContent = "Opening case and applying holds…";
+    const isManager = document.querySelector("#app")?.dataset.actorRole === "manager";
+    status.hidden = false; status.textContent = isManager ? "Opening administrative case…" : "Submitting dispute request…";
     try {
       const data = Object.fromEntries(new FormData(form).entries());
       await requestJson("/api/digital-den/disputes/manage", { method: "POST", body: JSON.stringify(data) });
-      status.textContent = "Case opened. Completion, payout and timeout holds are active."; await renderPage(true);
+      status.textContent = isManager ? "Administrative case opened." : "Dispute request submitted for manager review."; await renderPage(true);
     } catch (error) { status.textContent = error.message; }
   });
 

@@ -121,17 +121,20 @@ async function completeUpload(upload, cloudinary) {
 async function injectUploadPanel() {
   if (location.hash !== "#files") return;
   const content = document.querySelector("#workspace-content");
-  if (!content || content.querySelector("#file-upload-panel")) return;
+  const slot = content?.querySelector("#file-upload-slot");
+  if (!slot || slot.dataset.ready === "true") return;
+  slot.dataset.ready = "true";
 
   let loaded;
   try {
     loaded = await loadContext();
   } catch {
+    slot.dataset.ready = "false";
     return;
   }
   if (!loaded.actor || !["manager", "team_member", "client"].includes(loaded.actor.role) || !loaded.projects.length) return;
 
-  content.insertAdjacentHTML("afterbegin", uploadMarkup(loaded.projects));
+  slot.innerHTML = uploadMarkup(loaded.projects);
   const form = content.querySelector("#file-upload-form");
   const input = content.querySelector("#file-input");
   const button = content.querySelector("#file-upload-button");

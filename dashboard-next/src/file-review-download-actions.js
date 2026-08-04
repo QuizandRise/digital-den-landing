@@ -1,5 +1,5 @@
 const API_BASE = globalThis.location?.origin ?? "";
-let loaded = false;
+let loading = false;
 
 async function requestJson(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -62,8 +62,10 @@ function panelMarkup(files, role) {
 async function loadPanel() {
   if (location.hash !== "#files") return;
   const content = document.querySelector("#workspace-content");
-  if (!content || content.querySelector("#file-security-panel") || loaded) return;
-  loaded = true;
+  const slot = content?.querySelector("#file-security-slot");
+  if (!slot || slot.dataset.ready === "true" || loading) return;
+  loading = true;
+  slot.dataset.ready = "true";
 
   try {
     const [sessionPayload, filesPayload] = await Promise.all([
@@ -72,9 +74,11 @@ async function loadPanel() {
     ]);
     const role = sessionPayload.actor?.role;
     if (!role) return;
-    content.insertAdjacentHTML("afterbegin", panelMarkup(filesPayload.files || [], role));
+    slot.innerHTML = panelMarkup(filesPayload.files || [], role);
   } catch {
-    loaded = false;
+    slot.dataset.ready = "false";
+  } finally {
+    loading = false;
   }
 }
 
@@ -124,9 +128,8 @@ document.addEventListener("click", event => {
 });
 
 const observer = new MutationObserver(() => {
-  if (location.hash !== "#files") loaded = false;
   loadPanel();
 });
 observer.observe(document.documentElement, { childList: true, subtree: true });
-window.addEventListener("hashchange", () => { loaded = false; loadPanel(); });
+window.addEventListener("hashchange", loadPanel);
 loadPanel();
