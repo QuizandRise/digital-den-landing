@@ -1,3 +1,5 @@
+import { ROLE_CAPABILITIES } from "./platform-config.js";
+
 const content = document.querySelector("#workspace-content");
 const title = document.querySelector("#view-title");
 const description = document.querySelector("#view-description");
@@ -174,6 +176,8 @@ function renderProjectWorkspace() {
   if (!route || !content) return false;
 
   const project = loadProject(route.projectId);
+  const canViewProjectAudit = Boolean(ROLE_CAPABILITIES[actorRole()]?.viewProjectAudit);
+  const visibleTab = route.tab === "audit" && !canViewProjectAudit ? "overview" : route.tab;
   const returnRoute = projectListRoute(project);
   title.textContent = project?.title || "Project Workspace";
   description.textContent = "Role-scoped project delivery command centre.";
@@ -189,14 +193,14 @@ function renderProjectWorkspace() {
       <span class="badge cyan">${escapeHtml(project.status)}</span>
     </header>
     <nav class="project-workspace-tabs" aria-label="Project workspace sections">
-      ${tabLink(project, "overview", "Overview", route.tab)}
-      ${tabLink(project, "messages", "Messages", route.tab)}
-      ${tabLink(project, "files", "Files", route.tab)}
-      ${tabLink(project, "disputes", "Disputes", route.tab)}
-      ${tabLink(project, "billing", "Billing", route.tab)}
-      ${tabLink(project, "audit", "Audit log", route.tab)}
+      ${tabLink(project, "overview", "Overview", visibleTab)}
+      ${tabLink(project, "messages", "Messages", visibleTab)}
+      ${tabLink(project, "files", "Files", visibleTab)}
+      ${tabLink(project, "disputes", "Disputes", visibleTab)}
+      ${tabLink(project, "billing", "Billing", visibleTab)}
+      ${canViewProjectAudit ? tabLink(project, "audit", "Audit log", visibleTab) : ""}
     </nav>
-    <div class="project-workspace-content">${panelForTab(project, route.tab)}</div>
+    <div class="project-workspace-content">${panelForTab(project, visibleTab)}</div>
   </div>`;
   return true;
 }

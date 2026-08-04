@@ -11,6 +11,9 @@ assert.equal(roleLabel("team_member"), "Professional");
 assert.equal(ROLE_CAPABILITIES.manager.startProject, true);
 assert.equal(ROLE_CAPABILITIES.client.startProject, false);
 assert.equal(ROLE_CAPABILITIES.team_member.startProject, false);
+assert.equal(ROLE_CAPABILITIES.manager.viewProjectAudit, true);
+assert.equal(ROLE_CAPABILITIES.client.viewProjectAudit, false);
+assert.equal(ROLE_CAPABILITIES.team_member.viewProjectAudit, false);
 assert.equal(ROLE_PRESENTATION.team_member.projectRoute, "assigned_work");
 assert.equal(ROLE_PRESENTATION.manager.projectRoute, "projects");
 assert.equal(ROLE_PRESENTATION.client.projectRoute, "projects");
@@ -64,6 +67,8 @@ assert.doesNotMatch(fileUpload, /insertAdjacentHTML\("afterbegin"/);
 assert.doesNotMatch(fileReview, /insertAdjacentHTML\("afterbegin"/);
 
 assert.match(projectWorkspace, /actorRole\(\) === "team_member" \? "assigned_work" : "projects"/);
+assert.match(projectWorkspace, /route\.tab === "audit" && !canViewProjectAudit \? "overview" : route\.tab/);
+assert.match(projectWorkspace, /canViewProjectAudit \? tabLink\(project, "audit", "Audit log", visibleTab\) : ""/);
 assert.match(projectWorkspace, /project\.returnRoute = currentRoute\(\) === "assigned_work" \? "assigned_work" : "projects"/);
 assert.match(projectWorkspace, /role === "manager" \? `<a class="button secondary project-quick-action" href="#team">Assign professional/);
 

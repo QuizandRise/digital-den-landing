@@ -27,6 +27,9 @@ assert.equal(clientOverview.flaggedMessageCount, 0, "Client overview must not ex
 assert.equal(ROLE_CAPABILITIES.manager.startProject, true, "Manager may retain the New project action");
 assert.equal(ROLE_CAPABILITIES.client.startProject, false, "Client project creation is not enabled by current policy");
 assert.equal(ROLE_CAPABILITIES.team_member.startProject, false, "Professional must not see the New project action");
+assert.equal(ROLE_CAPABILITIES.manager.viewProjectAudit, true, "Manager may view project audit information");
+assert.equal(ROLE_CAPABILITIES.client.viewProjectAudit, false, "Client must not view project audit information");
+assert.equal(ROLE_CAPABILITIES.team_member.viewProjectAudit, false, "Professional must not view project audit information");
 
 const internalMessage = { project: "scoped", from: "System", text: "Internal policy reason", time: "now", state: "flagged", policyReason: "manager-only" };
 assert.equal(presentMessageForRole(internalMessage, "manager"), internalMessage, "Manager must retain full moderation detail");
