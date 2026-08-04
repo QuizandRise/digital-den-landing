@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { createMockDashboardAdapter } from "../dashboard-next/src/services/mock-dashboard-adapter.js";
+import { presentMessageForRole } from "../dashboard-next/src/message-presentation.js";
+import { ROLE_CAPABILITIES } from "../dashboard-next/src/platform-config.js";
 
 const adapter = createMockDashboardAdapter();
 
@@ -21,6 +23,19 @@ assert.equal(clientOverview.reviews.length, 0, "Client overview must not expose 
 assert.ok(managerOverview.flaggedMessageCount > 0, "Manager overview should expose moderation count");
 assert.equal(teamOverview.flaggedMessageCount, 0, "Team-member overview must not expose moderation count");
 assert.equal(clientOverview.flaggedMessageCount, 0, "Client overview must not expose moderation count");
+
+assert.equal(ROLE_CAPABILITIES.manager.startProject, true, "Manager may retain the New project action");
+assert.equal(ROLE_CAPABILITIES.client.startProject, false, "Client project creation is not enabled by current policy");
+assert.equal(ROLE_CAPABILITIES.team_member.startProject, false, "Professional must not see the New project action");
+
+const internalMessage = { project: "scoped", from: "System", text: "Internal policy reason", time: "now", state: "flagged", policyReason: "manager-only" };
+assert.equal(presentMessageForRole(internalMessage, "manager"), internalMessage, "Manager must retain full moderation detail");
+for (const role of ["client", "team_member"]) {
+  const message = presentMessageForRole(internalMessage, role);
+  assert.equal(message.text, "Message under review", `${role} should receive neutral moderation text`);
+  assert.equal(message.state, "under_review", `${role} should not receive the internal flagged state`);
+  assert.equal("policyReason" in message, false, `${role} should not receive policy metadata`);
+}
 
 const requiredReadMethods = [
   "getActor",

@@ -15,9 +15,9 @@ export const ROLE_PRESENTATION = Object.freeze({
 });
 
 export const ROLE_CAPABILITIES = Object.freeze({
-  manager: Object.freeze({ manageProjects: true, viewClients: true, viewInternalFinancials: true }),
-  client: Object.freeze({ manageProjects: false, viewClients: false, viewInternalFinancials: false }),
-  team_member: Object.freeze({ manageProjects: false, viewClients: false, viewInternalFinancials: false }),
+  manager: Object.freeze({ manageProjects: true, startProject: true, viewClients: true, viewInternalFinancials: true }),
+  client: Object.freeze({ manageProjects: false, startProject: false, viewClients: false, viewInternalFinancials: false }),
+  team_member: Object.freeze({ manageProjects: false, startProject: false, viewClients: false, viewInternalFinancials: false }),
 });
 
 export function normalizeProjectPresentation(project = {}) {

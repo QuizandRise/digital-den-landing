@@ -1,8 +1,9 @@
 import { FEATURE_FLAGS, ROUTE_POLICY, NAVIGATION } from "./config.js";
 import { createDashboardService } from "./services/dashboard-service.js";
 import { attachTeamInvitationActions, teamInviteStatusPanel, teamMemberActions } from "./team-invite-actions.js";
-import { PLATFORM_CONFIG, roleLabel } from "./platform-config.js";
+import { PLATFORM_CONFIG, ROLE_CAPABILITIES, roleLabel } from "./platform-config.js";
 import { FINANCIAL_FIELDS, financialValue, normalizeFinancialRecord } from "./financial-contract.js";
+import { presentMessageForRole } from "./message-presentation.js";
 
 const service = createDashboardService();
 const state = {
@@ -31,6 +32,7 @@ const description = document.querySelector("#view-description");
 const search = document.querySelector("#global-search");
 const rolePreview = document.querySelector(".role-preview");
 const environmentPill = document.querySelector("#environment-pill");
+const newProjectButton = document.querySelector("#new-project-button");
 
 const descriptions = {
   overview:"Role-scoped project delivery visibility.", projects:"Projects visible within the current actor scope.",
@@ -138,7 +140,7 @@ function overview(){
 }
 
 function messagesView(){
-  const rows = state.messages.map(x=>`<tr><td><strong>${escapeHtml(x.project)}</strong></td><td>${escapeHtml(x.from)}</td><td>${escapeHtml(x.text)}</td><td>${escapeHtml(x.time)}</td><td>${badge(x.state)}</td></tr>`);
+  const rows = state.messages.map(message => presentMessageForRole(message, state.role)).map(x=>`<tr><td><strong>${escapeHtml(x.project)}</strong></td><td>${escapeHtml(x.from)}</td><td>${escapeHtml(x.text)}</td><td>${escapeHtml(x.time)}</td><td>${badge(x.state)}</td></tr>`);
   const list = rows.length ? tableView(["Project","Sender","Message","Time","State"], rows, "<h2>Project conversations</h2><p>Messages visible within your authorised project scope.</p>") : "";
   return `<div id="message-capability-slot"></div>${list || `<section class="card panel"><div class="empty-state"><strong>No project messages</strong><span>No messages are currently available in your project scope.</span></div></section>`}`;
 }
@@ -214,6 +216,7 @@ function renderView(){
 
 function render(){
   app.dataset.actorRole=state.role;
+  newProjectButton.hidden=!ROLE_CAPABILITIES[state.role]?.startProject;
   renderNav();
   title.textContent=label(state.view);
   description.textContent=descriptions[state.view] ?? "Structured workspace module.";

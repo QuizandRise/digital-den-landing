@@ -2,11 +2,15 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { ROUTE_POLICY } from "../dashboard-next/src/config.js";
 import { FINANCIAL_FIELDS, normalizeFinancialRecord } from "../dashboard-next/src/financial-contract.js";
-import { PLATFORM_CONFIG, ROLE_PRESENTATION, normalizeProjectPresentation, roleLabel } from "../dashboard-next/src/platform-config.js";
+import { PLATFORM_CONFIG, ROLE_CAPABILITIES, ROLE_PRESENTATION, normalizeProjectPresentation, roleLabel } from "../dashboard-next/src/platform-config.js";
+import { presentMessageForRole } from "../dashboard-next/src/message-presentation.js";
 
 assert.equal(PLATFORM_CONFIG.platformName, "WorkforceDen");
 assert.equal(PLATFORM_CONFIG.tenantId, null);
 assert.equal(roleLabel("team_member"), "Professional");
+assert.equal(ROLE_CAPABILITIES.manager.startProject, true);
+assert.equal(ROLE_CAPABILITIES.client.startProject, false);
+assert.equal(ROLE_CAPABILITIES.team_member.startProject, false);
 assert.equal(ROLE_PRESENTATION.team_member.projectRoute, "assigned_work");
 assert.equal(ROLE_PRESENTATION.manager.projectRoute, "projects");
 assert.equal(ROLE_PRESENTATION.client.projectRoute, "projects");
@@ -29,6 +33,17 @@ assert.ok(!FINANCIAL_FIELDS.team_member.includes("contractValue"));
 assert.ok(!FINANCIAL_FIELDS.team_member.includes("platformFee"));
 assert.ok(FINANCIAL_FIELDS.manager.includes("platformFee"));
 
+const flaggedMessage = { project: "scoped-project", from: "System", text: "Blocked for internal policy reason", time: "now", state: "flagged", policyReason: "internal-only" };
+assert.deepEqual(presentMessageForRole(flaggedMessage, "manager"), flaggedMessage);
+for (const role of ["client", "team_member"]) {
+  const presented = presentMessageForRole(flaggedMessage, role);
+  assert.equal(presented.text, "Message under review");
+  assert.equal(presented.state, "under_review");
+  assert.equal(presented.from, "Digital Den");
+  assert.equal("policyReason" in presented, false);
+  assert.doesNotMatch(JSON.stringify(presented), /flagged|internal policy reason|internal-only/i);
+}
+
 const app = await readFile("dashboard-next/src/app.js", "utf8");
 const projectWorkspace = await readFile("dashboard-next/src/project-workspace-safe.js", "utf8");
 const messages = await readFile("dashboard-next/src/messaging-actions.js", "utf8");
@@ -36,6 +51,7 @@ const fileUpload = await readFile("dashboard-next/src/file-upload-actions.js", "
 const fileReview = await readFile("dashboard-next/src/file-review-download-actions.js", "utf8");
 
 assert.match(app, /app\.dataset\.actorRole=state\.role/);
+assert.match(app, /newProjectButton\.hidden=!ROLE_CAPABILITIES\[state\.role\]\?\.startProject/);
 assert.match(app, /id="message-capability-slot"/);
 assert.match(app, /id="file-upload-slot"/);
 assert.match(app, /id="file-security-slot"/);
