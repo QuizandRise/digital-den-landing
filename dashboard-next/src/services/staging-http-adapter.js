@@ -83,6 +83,10 @@ function mapTeamMember(item) {
   };
 }
 
+function invitationWasSent(payload) {
+  return Boolean(payload?.invitation?.sent ?? payload?.invitationSent);
+}
+
 export function createStagingHttpAdapter() {
   return assertReadOnlyAdapter({
     async getActor() {
@@ -159,7 +163,7 @@ export function createStagingHttpAdapter() {
         intent: "team-administration",
         body: input,
       });
-      return { member: mapTeamMember(payload.teamMember), invitationSent: Boolean(payload.invitationSent) };
+      return { member: mapTeamMember(payload.teamMember), invitationSent: invitationWasSent(payload) };
     },
     async updateTeamMember(input) {
       const payload = await requestJson("/api/digital-den/team/manage", {
@@ -167,7 +171,7 @@ export function createStagingHttpAdapter() {
         intent: "team-administration",
         body: input,
       });
-      return { member: mapTeamMember(payload.teamMember), invitationSent: Boolean(payload.invitationSent) };
+      return { member: mapTeamMember(payload.teamMember), invitationSent: invitationWasSent(payload) };
     },
     async resendTeamInvitation(userId) {
       const payload = await requestJson("/api/digital-den/team/manage", {
@@ -175,7 +179,7 @@ export function createStagingHttpAdapter() {
         intent: "team-administration",
         body: { userId, action: "resend_invitation" },
       });
-      return { member: mapTeamMember(payload.teamMember), invitationSent: Boolean(payload.invitationSent) };
+      return { member: mapTeamMember(payload.teamMember), invitationSent: invitationWasSent(payload) };
     },
     async getAuditEvents(role) {
       if (role !== "manager") return [];
