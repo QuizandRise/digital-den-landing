@@ -5,6 +5,11 @@ import { PLATFORM_CONFIG, ROLE_CAPABILITIES, roleLabel } from "./platform-config
 import { FINANCIAL_FIELDS, financialValue, normalizeFinancialRecord } from "./financial-contract.js";
 import { presentMessageForRole } from "./message-presentation.js";
 import { ASSIGNMENT_VIEWS, allowedRoutesFor } from "./assignment-capability.js";
+import {
+  deliveriesCapabilityEnabled,
+  projectLifecycleCapabilityEnabled,
+  quotationsCapabilityEnabled,
+} from "./launch-readiness-capability.js";
 
 const service = createDashboardService();
 const state = {
@@ -171,7 +176,46 @@ function financialView(){
   const record = normalizeFinancialRecord();
   const fields = FINANCIAL_FIELDS[state.role] || [];
   const heading = state.role === "manager" ? "Financials" : state.role === "client" ? "Billing" : "Compensation";
-  return `<section class="card panel"><div class="panel-header"><div><h2>${heading}</h2><p>Read-only agency financial visibility. Real payment execution remains disabled; shadow settlement only.</p></div><span class="pill neutral">Pending integration</span></div><div class="financial-grid">${fields.map(field => `<div class="financial-field"><small>${FINANCIAL_LABELS[field]}</small><strong>${escapeHtml(financialValue(record[field]))}</strong></div>`).join("")}</div><div class="notice">No payment, refund, invoice or payout action is enabled from this workspace. Digital Den is not a public marketplace payment engine.</div></section>`;
+  const paymentSlot = state.role === "client" && projectLifecycleCapabilityEnabled(state.actor)
+    ? `<div id="project-payment-projection-slot"></div>`
+    : "";
+  const quotationSlot = state.role === "client" && quotationsCapabilityEnabled(state.actor)
+    ? `<div id="quotation-lifecycle-slot"></div>`
+    : "";
+  return `${quotationSlot}${paymentSlot}<section class="card panel"><div class="panel-header"><div><h2>${heading}</h2><p>Read-only agency financial visibility. Real payment execution remains disabled; shadow settlement only.</p></div><span class="pill neutral">Pending integration</span></div><div class="financial-grid">${fields.map(field => `<div class="financial-field"><small>${FINANCIAL_LABELS[field]}</small><strong>${escapeHtml(financialValue(record[field]))}</strong></div>`).join("")}</div><div class="notice" role="status" aria-live="polite">No payment, refund, invoice or payout action is enabled from this workspace. Digital Den is not a public marketplace payment engine.</div></section>`;
+}
+
+function launchReadinessSlots(view) {
+  // Server-authoritative via actor.agencyCapabilities (quotationsEnabled, deliveriesEnabled, projectLifecycleEnabled).
+  const parts = [];
+  if (["projects", "assigned_work"].includes(view)) {
+    if (state.role === "manager" && quotationsCapabilityEnabled(state.actor)) {
+      parts.push('<div id="quotation-lifecycle-slot"></div>');
+    }
+    if (state.role === "client" && quotationsCapabilityEnabled(state.actor)) {
+      parts.push('<div id="quotation-lifecycle-slot"></div>');
+    }
+    if (projectLifecycleCapabilityEnabled(state.actor)) {
+      parts.push('<div id="project-lifecycle-slot"></div>');
+    }
+    if (deliveriesCapabilityEnabled(state.actor)) {
+      parts.push('<div id="delivery-lifecycle-slot"></div>');
+    }
+  }
+  if (view === "review" && state.role === "manager" && deliveriesCapabilityEnabled(state.actor)) {
+    parts.push('<div id="delivery-lifecycle-slot"></div>');
+  }
+  return parts.join("");
+}
+
+function reviewIntro() {
+  if (state.role !== "manager") {
+    return "<h2>Items requiring manager decision</h2><p>Review queue visibility is limited to Managers.</p>";
+  }
+  if (deliveriesCapabilityEnabled(state.actor)) {
+    return "<h2>Items requiring manager decision</h2><p>Use the project delivery actions below to approve submissions for client review or request internal correction.</p>";
+  }
+  return "<h2>Items requiring manager decision</h2><p>Delivery review actions appear when deliveries capability is enabled on your agency workspace.</p>";
 }
 
 function tableView(headers, rows, intro=""){
@@ -210,8 +254,8 @@ function renderView(){
   if(state.loading) return loadingState();
   if(state.error) return errorState();
   if(state.view==="overview") return overview();
-  if(state.view==="projects"||state.view==="assigned_work") return `<section class="card panel"><div class="panel-header"><div><h2>${label(state.view)}</h2><p>Authenticated project view.</p></div></div>${projectCards()}</section>`;
-  if(state.view==="review") return tableView(["Project","Submission","Owner","Waiting","Priority"],state.reviews.map(x=>`<tr><td><strong>${escapeHtml(x.project)}</strong></td><td>${escapeHtml(x.item)}</td><td>${escapeHtml(x.owner)}</td><td>${escapeHtml(x.age)}</td><td>${badge(x.priority)}</td></tr>`),"<h2>Items requiring manager decision</h2><p>No approval action is enabled yet.</p>");
+  if(state.view==="projects"||state.view==="assigned_work") return `${launchReadinessSlots(state.view)}<section class="card panel"><div class="panel-header"><div><h2>${label(state.view)}</h2><p>Authenticated project view.</p></div></div>${projectCards()}</section>`;
+  if(state.view==="review") return `${launchReadinessSlots("review")}${tableView(["Project","Submission","Owner","Waiting","Priority"],state.reviews.map(x=>`<tr><td><strong>${escapeHtml(x.project)}</strong></td><td>${escapeHtml(x.item)}</td><td>${escapeHtml(x.owner)}</td><td>${escapeHtml(x.age)}</td><td>${badge(x.priority)}</td></tr>`),reviewIntro())}`;
   if(state.view==="messages") return messagesView();
   if(state.view==="communication_control") return `<div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Flagged communications</h2><p>Messages requiring policy review.</p></div></div>${state.messages.filter(x=>x.state==="flagged").map(x=>`<article class="policy-alert"><div><strong>${escapeHtml(x.project)}</strong><p>${escapeHtml(x.text)}</p><small>${escapeHtml(x.time)}</small></div>${badge(x.state)}</article>`).join("")||`<div class="empty-state"><strong>No flagged messages</strong><span>No policy review is currently required.</span></div>`}</section><aside class="card panel"><div class="panel-header"><div><h2>Policy rules</h2></div></div><div class="list">${state.communicationPolicy.map(x=>`<div class="list-row policy-row"><span><strong>${escapeHtml(x.rule)}</strong><small>${escapeHtml(x.action)}</small></span>${badge(x.state)}</div>`).join("")}</div></aside></div>`;
   if(state.view==="files") return filesView();

@@ -21,6 +21,10 @@ export const FEATURE_FLAGS = Object.freeze({
   // Assignments UI availability is server-authoritative via
   // actor.agencyCapabilities.assignmentsEnabled (fail closed). Never open from host alone.
   assignments: false,
+  // Launch-readiness modules are server-capability gated via actor.agencyCapabilities.
+  quotations: false,
+  projectLifecycle: false,
+  deliveries: false,
 });
 
 export const API_CONFIG = Object.freeze({
