@@ -16,6 +16,11 @@ const requiredFiles = [
   "dashboard-next/src/platform-config.js",
   "dashboard-next/src/mock-data.js",
   "dashboard-next/src/app.js",
+  "dashboard-next/src/assignment-actions.js",
+  "dashboard-next/src/launch-readiness-capability.js",
+  "dashboard-next/src/quotation-actions.js",
+  "dashboard-next/src/delivery-actions.js",
+  "dashboard-next/src/project-lifecycle-actions.js",
   "dashboard-next/src/services/adapter-contract.js",
   "dashboard-next/src/services/dashboard-service.js",
   "dashboard-next/src/services/mock-dashboard-adapter.js",
@@ -81,6 +86,9 @@ if (failures.length === 0) {
     [config, /messagingMutations:\s*false/, "messaging mutations must remain disabled"],
     [config, /billing:\s*false/, "billing integration must remain disabled"],
     [config, /assignments:\s*false/, "assignments feature flag must fail closed and not open from host alone"],
+    [config, /quotations:\s*false/, "quotations feature flag must fail closed and not open from host alone"],
+    [config, /projectLifecycle:\s*false/, "project lifecycle feature flag must fail closed and not open from host alone"],
+    [config, /deliveries:\s*false/, "deliveries feature flag must fail closed and not open from host alone"],
     [config, /baseUrl:\s*globalThis\.location\?\.origin/, "same-origin Digital Den API base is missing"],
     [config, /manager:\s*\[[^\]]*projects/, "manager route policy is missing"],
     [config, /manager:\s*\[[^\]]*assignments/, "manager route policy must include assignments"],
@@ -88,6 +96,13 @@ if (failures.length === 0) {
     [config, /team_member:\s*\[[^\]]*my_assignments/, "team-member route policy must include my_assignments"],
     [config, /client:\s*\[[^\]]*projects/, "client route policy is missing"],
     [nextHtml, /assignment-actions\.js/, "assignment compensation module entry is missing"],
+    [nextHtml, /quotation-actions\.js/, "quotation lifecycle module entry is missing"],
+    [nextHtml, /delivery-actions\.js/, "delivery lifecycle module entry is missing"],
+    [nextHtml, /project-lifecycle-actions\.js/, "project lifecycle module entry is missing"],
+    [app, /launch-readiness-capability\.js/, "application must import launch-readiness capability helpers"],
+    [app, /quotationsCapabilityEnabled/, "application must gate quotation panels through agency capabilities"],
+    [app, /deliveriesCapabilityEnabled/, "application must gate delivery panels through agency capabilities"],
+    [app, /projectLifecycleCapabilityEnabled/, "application must gate lifecycle panels through agency capabilities"],
     [app, /createDashboardService/, "application must consume the dashboard service boundary"],
     [app, /service\.getActor/, "application must load actors through the service"],
     [app, /Promise\.all/, "application must load read-only workspace data through the adapter"],
@@ -181,6 +196,15 @@ if (failures.length === 0) {
   if (/assignments:\s*AUTHENTICATED_WORKSPACE/.test(config)) {
     failures.push("assignments must not open solely because the workspace is authenticated");
   }
+  if (/quotations:\s*AUTHENTICATED_WORKSPACE/.test(config)) {
+    failures.push("quotations must not open solely because the workspace is authenticated");
+  }
+  if (/projectLifecycle:\s*AUTHENTICATED_WORKSPACE/.test(config)) {
+    failures.push("project lifecycle must not open solely because the workspace is authenticated");
+  }
+  if (/deliveries:\s*AUTHENTICATED_WORKSPACE/.test(config)) {
+    failures.push("deliveries must not open solely because the workspace is authenticated");
+  }
   const assignmentUiSource = await readFile("dashboard-next/src/assignment-actions.js", "utf8");
   if (!/view=capabilities|assignmentsEnabled/.test(assignmentUiSource)) {
     failures.push("assignment UI must use a server-authoritative capability check");
@@ -193,6 +217,36 @@ if (failures.length === 0) {
   }
   if (/New Team Member id/.test(assignmentUiSource)) {
     failures.push("reassignment UI must not ask Managers to type MongoDB Team Member IDs");
+  }
+
+  const quotationUiSource = await readFile("dashboard-next/src/quotation-actions.js", "utf8");
+  if (!/quotation-lifecycle/.test(quotationUiSource)) {
+    failures.push("quotation UI must use quotation-lifecycle intent");
+  }
+  if (!/quotationsEnabled|quotationsCapabilityEnabled/.test(quotationUiSource)) {
+    failures.push("quotation UI must reference quotationsEnabled capability");
+  }
+  if (/mark_paid|stripe payout/i.test(quotationUiSource)) {
+    failures.push("quotation UI must not expose mark_paid or Stripe payout");
+  }
+
+  const deliveryUiSource = await readFile("dashboard-next/src/delivery-actions.js", "utf8");
+  if (!/delivery-lifecycle/.test(deliveryUiSource)) {
+    failures.push("delivery UI must use delivery-lifecycle intent");
+  }
+  if (!/deliveriesEnabled|deliveriesCapabilityEnabled/.test(deliveryUiSource)) {
+    failures.push("delivery UI must reference deliveriesEnabled capability");
+  }
+
+  const lifecycleUiSource = await readFile("dashboard-next/src/project-lifecycle-actions.js", "utf8");
+  if (!/project-lifecycle/.test(lifecycleUiSource)) {
+    failures.push("project lifecycle UI must use project-lifecycle intent");
+  }
+  if (!/projectLifecycleEnabled|projectLifecycleCapabilityEnabled/.test(lifecycleUiSource)) {
+    failures.push("project lifecycle UI must reference projectLifecycleEnabled capability");
+  }
+  if (/mark_paid|stripe payout/i.test(lifecycleUiSource)) {
+    failures.push("project lifecycle UI must not expose mark_paid or Stripe payout");
   }
 
   if (/from\s+["'].\/mock-data\.js["']/.test(app)) failures.push("application must not import mock data directly");
