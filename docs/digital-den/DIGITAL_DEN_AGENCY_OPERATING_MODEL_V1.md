@@ -126,10 +126,20 @@ Private source metadata must not appear in client APIs unless explicitly require
 
 | Concept | Visibility | Owner |
 | --- | --- | --- |
-| `clientCommercialAmount` (client price; compatible with `agreedPrice`) | Client + Manager (+ Team Member only if authorised presentation requires commercial context without internal cost) | Manager |
-| `internalAssigneeCompensation` | Manager only | Manager |
+| `clientCommercialAmount` (client price; compatible with `agreedPrice`) | Client + Manager | Manager |
+| `internalAssigneeCompensation` (project-level) | Manager only | Manager |
 
 Never expose `internalAssigneeCompensation` (or legacy contractor share fields) through a client response.
+
+### 7.1 Team Member compensation visibility (current vs future)
+
+Current release policy:
+
+- Manager may view internal project compensation.
+- Client must never view internal compensation.
+- Team Member must **not** receive global project-level compensation fields.
+
+Future Team Member compensation visibility requires a **separate assignment-level model** so each Team Member can see only their own agreed assignment compensation. That model is intentionally out of scope for the current agency-boundary alignment and must not be improvised by exposing project-level settlement shares.
 
 ## 8. Payment-system boundary
 
