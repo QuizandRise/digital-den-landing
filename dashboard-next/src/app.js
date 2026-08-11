@@ -4,6 +4,7 @@ import { attachTeamInvitationActions, teamInviteStatusPanel, teamMemberActions }
 import { PLATFORM_CONFIG, ROLE_CAPABILITIES, roleLabel } from "./platform-config.js";
 import { FINANCIAL_FIELDS, financialValue, normalizeFinancialRecord } from "./financial-contract.js";
 import { presentMessageForRole } from "./message-presentation.js";
+import { ASSIGNMENT_VIEWS, allowedRoutesFor } from "./assignment-capability.js";
 
 const service = createDashboardService();
 const state = {
@@ -45,20 +46,9 @@ const descriptions = {
 };
 
 const label = key => NAVIGATION[key]?.[1] ?? key.replaceAll("_", " ");
-const ASSIGNMENT_VIEWS = new Set(["assignments", "my_assignments"]);
-
-function assignmentsCapabilityEnabled() {
-  if (state.role === "client") return false;
-  const caps = state.actor?.agencyCapabilities;
-  return Boolean(caps && caps.assignmentsEnabled === true);
-}
 
 function allowedRoutes(role = state.role) {
-  const routes = ROUTE_POLICY[role] || [];
-  return routes.filter(key => {
-    if (!ASSIGNMENT_VIEWS.has(key)) return true;
-    return assignmentsCapabilityEnabled();
-  });
+  return allowedRoutesFor(role, state.actor);
 }
 
 const badge = status => {
@@ -317,7 +307,7 @@ content.addEventListener("submit", async event => {
   }
 });
 
-window.addEventListener("hashchange",()=>{const key=location.hash.slice(1)||"overview";if(allowedRoutes().includes(key)){state.view=key;render();}else if(ASSIGNMENT_VIEWS.has(key)){state.view="overview";history.replaceState(null,"",`#overview`);render();}});
+window.addEventListener("hashchange",()=>{const key=location.hash.slice(1)||"overview";if(allowedRoutes().includes(key)){state.view=key;render();}else if(ASSIGNMENT_VIEWS.includes(key)){state.view="overview";history.replaceState(null,"",`#overview`);render();}});
 nav.addEventListener("click",event=>{const link=event.target.closest("[data-view]");if(link){state.view=link.dataset.view;app.classList.remove("menu-open");render();}});
 document.querySelectorAll("[data-role]").forEach(button=>button.addEventListener("click",()=>setRole(button.dataset.role)));
 search.addEventListener("input",()=>{state.query=search.value;render();});

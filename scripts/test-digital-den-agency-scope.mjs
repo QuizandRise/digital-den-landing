@@ -70,9 +70,12 @@ assert.doesNotMatch(assignmentUi, /stripe\.com|createPayout|Stripe Connect/i);
 assert.doesNotMatch(assignmentUi, /data-action="mark_paid"/);
 
 const appSource = readFileSync("dashboard-next/src/app.js", "utf8");
-assert.match(appSource, /agencyCapabilities/);
-assert.match(appSource, /assignmentsEnabled/);
-assert.match(appSource, /allowedRoutes/);
+assert.match(appSource, /assignment-capability\.js/);
+assert.match(appSource, /allowedRoutesFor/);
+const capabilitySource = readFileSync("dashboard-next/src/assignment-capability.js", "utf8");
+assert.match(capabilitySource, /agencyCapabilities/);
+assert.match(capabilitySource, /assignmentsEnabled/);
+assert.match(capabilitySource, /allowedRoutesFor/);
 
 const indexHtml = readFileSync("dashboard-next/index.html", "utf8");
 assert.match(indexHtml, /Team Member/);

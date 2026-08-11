@@ -138,7 +138,7 @@ function actionAllowed(assignment, action) {
   return Array.isArray(assignment.permittedActions) && assignment.permittedActions.includes(action);
 }
 
-function managerActions(assignment) {
+function managerActions(assignment, context) {
   const forms = [];
   if (actionAllowed(assignment, "mark_under_review")) {
     forms.push(`<form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="mark_under_review">
@@ -170,20 +170,50 @@ function managerActions(assignment) {
   if (actionAllowed(assignment, "adjust_compensation")) {
     forms.push(`<form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="adjust_compensation">
       <label><strong>Adjusted final compensation</strong><input name="finalCompensation" type="number" min="0" step="0.01" required></label>
+      <label><strong>Adjustment decision</strong>
+        <select name="adjustmentDecision" required>
+          <option value="manager_correction">Manager correction</option>
+          <option value="scope_change">Scope change</option>
+          <option value="partial_amount">Partial amount</option>
+          <option value="agreed_zero">Agreed zero</option>
+        </select>
+      </label>
       <label><strong>Adjustment reason</strong><input name="adjustmentReason" required maxlength="2000"></label>
       <button class="button secondary" type="submit">Record compensation adjustment</button>
     </form>`);
   }
   if (actionAllowed(assignment, "reassign")) {
-    forms.push(`<form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="reassign">
-      <label><strong>New Team Member id</strong><input name="teamMemberId" required maxlength="80"></label>
+    const alternatives = (context.team || []).filter(member =>
+      String(member.userId) !== String(assignment.teamMemberId)
+    );
+    if (!alternatives.length) {
+      forms.push(`<div class="notice" style="margin-top:12px" role="status">No alternative Team Member is available for reassignment.</div>`);
+    } else {
+      const memberOptions = alternatives.map(member =>
+        `<option value="${escapeHtml(member.userId)}">${escapeHtml(member.name || member.email)} (${escapeHtml(member.email)})</option>`
+      ).join("");
+      forms.push(`<form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="reassign">
+      <label><strong>New Team Member</strong><select name="teamMemberId" required>${memberOptions}</select></label>
       <label><strong>New offered compensation</strong><input name="offeredCompensation" type="number" min="0" step="0.01" required></label>
       <label><strong>Reassignment reason</strong><input name="reassignmentReason" required maxlength="2000"></label>
       <button class="button secondary" type="submit">Reassign (supersede)</button>
     </form>`);
+    }
   }
   if (actionAllowed(assignment, "cancel")) {
     forms.push(`<form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="cancel">
+      <label><strong>Cancellation reason</strong><input name="cancellationReason" required maxlength="2000"></label>
+      <label><strong>Compensation decision</strong>
+        <select name="cancellationCompensationDecision" required>
+          <option value="pre_acceptance_cancel">Pre-acceptance cancel</option>
+          <option value="preserve_obligation">Preserve obligation</option>
+          <option value="agreed_zero">Agreed zero</option>
+          <option value="partial_amount">Partial amount</option>
+          <option value="disputed_hold">Disputed / hold</option>
+        </select>
+      </label>
+      <label><strong>Decision reason</strong><input name="cancellationDecisionReason" maxlength="2000" placeholder="Required detail for accepted/submitted cancellations"></label>
+      <label><strong>Partial amount (if partial)</strong><input name="cancellationPartialAmount" type="number" min="0" step="0.01"></label>
       <button class="button secondary" type="submit">Cancel assignment</button>
     </form>`);
   }
@@ -226,7 +256,7 @@ function timeline(assignment) {
   ).join("");
 }
 
-function assignmentCard(assignment, role) {
+function assignmentCard(assignment, role, context) {
   return `<article class="card panel" style="margin-bottom:16px">
     <div class="panel-header">
       <div>
@@ -243,7 +273,7 @@ function assignmentCard(assignment, role) {
     </div>
     <div class="panel-header" style="margin-top:12px"><div><h3>Compensation timeline</h3><p>Shadow obligation only. No Stripe payout or transfer is executed from this workspace.</p></div></div>
     <div class="list">${timeline(assignment)}</div>
-    ${role === "manager" ? managerActions(assignment) : teamMemberActions(assignment)}
+    ${role === "manager" ? managerActions(assignment, context) : teamMemberActions(assignment)}
     <div class="notice assignment-status" hidden role="status"></div>
   </article>`;
 }
@@ -255,7 +285,7 @@ function pageMarkup(context) {
     ? "Create and manage Team Member assignments and compensation obligations. Clients never see this information."
     : "Review offered compensation before acceptance, then track your own assignment and compensation status.";
   const cards = context.assignments.length
-    ? context.assignments.map(item => assignmentCard(item, role)).join("")
+    ? context.assignments.map(item => assignmentCard(item, role, context)).join("")
     : `<section class="card panel"><div class="empty-state"><strong>No assignments yet</strong><span>${role === "manager" ? "Create an assignment offer for a Team Member." : "When a Manager assigns work to you, it will appear here with the offered compensation."}</span></div></section>`;
   return `${createForm(context)}
     <section class="card panel" style="margin-bottom:18px">
@@ -273,8 +303,13 @@ async function mutate(form) {
     expectedVersion: Number(form.dataset.version),
     idempotencyKey: idempotencyKey(form.dataset.action),
   };
-  if (body.finalCompensation !== undefined) body.finalCompensation = Number(body.finalCompensation);
-  if (body.offeredCompensation !== undefined) body.offeredCompensation = Number(body.offeredCompensation);
+  if (body.finalCompensation !== undefined && body.finalCompensation !== "") body.finalCompensation = Number(body.finalCompensation);
+  if (body.offeredCompensation !== undefined && body.offeredCompensation !== "") body.offeredCompensation = Number(body.offeredCompensation);
+  if (body.cancellationPartialAmount !== undefined && body.cancellationPartialAmount !== "") {
+    body.cancellationPartialAmount = Number(body.cancellationPartialAmount);
+  } else {
+    delete body.cancellationPartialAmount;
+  }
   return requestJson("/api/digital-den/assignments/manage", {
     method: "PATCH",
     body: JSON.stringify(body),

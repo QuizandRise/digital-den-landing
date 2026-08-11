@@ -93,9 +93,8 @@ if (failures.length === 0) {
     [app, /Promise\.all/, "application must load read-only workspace data through the adapter"],
     [app, /state\.loading/, "application loading state is missing"],
     [app, /state\.error/, "application error state is missing"],
-    [app, /allowedRoutes\(/, "application must filter navigation through capability-aware allowed routes"],
-    [app, /agencyCapabilities/, "application must read server-authoritative agencyCapabilities"],
-    [app, /assignmentsEnabled/, "application must gate assignment routes on assignmentsEnabled"],
+    [app, /allowedRoutesFor\(/, "application must filter navigation through capability-aware allowed routes"],
+    [app, /assignment-capability\.js/, "application must import shared assignment capability helpers"],
     [app, /rolePreview\.hidden\s*=\s*true/, "authenticated workspace must hide preview role switching"],
     [app, /FEATURE_FLAGS\.authentication\s*&&\s*state\.actor\s*&&\s*role\s*!==\s*state\.actor\.role/, "authenticated workspace must reject mock cross-role switching"],
     [app, /actor\.role/, "authenticated workspace must derive role from the server session"],
@@ -188,6 +187,12 @@ if (failures.length === 0) {
   }
   if (!/permittedActions/.test(assignmentUiSource)) {
     failures.push("assignment UI must render state-aware actions from permittedActions");
+  }
+  if (!/<select name=["']teamMemberId["']/.test(assignmentUiSource)) {
+    failures.push("reassignment UI must use an authorised Team Member dropdown");
+  }
+  if (/New Team Member id/.test(assignmentUiSource)) {
+    failures.push("reassignment UI must not ask Managers to type MongoDB Team Member IDs");
   }
 
   if (/from\s+["'].\/mock-data\.js["']/.test(app)) failures.push("application must not import mock data directly");
