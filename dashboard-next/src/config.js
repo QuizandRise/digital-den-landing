@@ -18,7 +18,9 @@ export const FEATURE_FLAGS = Object.freeze({
   fileUpload: false,
   billing: false,
   disputes: AUTHENTICATED_WORKSPACE,
-  assignments: AUTHENTICATED_WORKSPACE,
+  // Assignments UI availability is server-authoritative via
+  // actor.agencyCapabilities.assignmentsEnabled (fail closed). Never open from host alone.
+  assignments: false,
 });
 
 export const API_CONFIG = Object.freeze({

@@ -45,6 +45,22 @@ const descriptions = {
 };
 
 const label = key => NAVIGATION[key]?.[1] ?? key.replaceAll("_", " ");
+const ASSIGNMENT_VIEWS = new Set(["assignments", "my_assignments"]);
+
+function assignmentsCapabilityEnabled() {
+  if (state.role === "client") return false;
+  const caps = state.actor?.agencyCapabilities;
+  return Boolean(caps && caps.assignmentsEnabled === true);
+}
+
+function allowedRoutes(role = state.role) {
+  const routes = ROUTE_POLICY[role] || [];
+  return routes.filter(key => {
+    if (!ASSIGNMENT_VIEWS.has(key)) return true;
+    return assignmentsCapabilityEnabled();
+  });
+}
+
 const badge = status => {
   const value=String(status).toLowerCase();
   const tone=value.includes("flag")||value.includes("high")||value.includes("suspended")?"red":value.includes("review")||value.includes("pending")||value.includes("capacity")||value.includes("invited")?"amber":value.includes("ready")||value.includes("available")||value.includes("clear")||value.includes("clean")||value.includes("delivered")||value.includes("active")?"green":"cyan";
@@ -101,7 +117,7 @@ async function setRole(role){
   if(!ROUTE_POLICY[role]) return;
   if(FEATURE_FLAGS.authentication && state.actor && role !== state.actor.role) return;
   state.role=role;
-  const allowed=ROUTE_POLICY[role];
+  const allowed=allowedRoutes(role);
   if(!allowed.includes(state.view)) state.view="overview";
   document.querySelectorAll("[data-role]").forEach(button=>button.classList.toggle("active",button.dataset.role===role));
   history.replaceState(null,"",`#${state.view}`);
@@ -109,7 +125,7 @@ async function setRole(role){
 }
 
 function renderNav(){
-  nav.innerHTML=ROUTE_POLICY[state.role].map(key=>`<a class="nav-link ${state.view===key?"active":""}" href="#${key}" data-view="${key}"><span aria-hidden="true">${NAVIGATION[key][0]}</span><span>${NAVIGATION[key][1]}</span></a>`).join("");
+  nav.innerHTML=allowedRoutes().map(key=>`<a class="nav-link ${state.view===key?"active":""}" href="#${key}" data-view="${key}"><span aria-hidden="true">${NAVIGATION[key][0]}</span><span>${NAVIGATION[key][1]}</span></a>`).join("");
 }
 
 function professionalOverview(){
@@ -301,7 +317,7 @@ content.addEventListener("submit", async event => {
   }
 });
 
-window.addEventListener("hashchange",()=>{const key=location.hash.slice(1)||"overview";if(ROUTE_POLICY[state.role].includes(key)){state.view=key;render();}});
+window.addEventListener("hashchange",()=>{const key=location.hash.slice(1)||"overview";if(allowedRoutes().includes(key)){state.view=key;render();}else if(ASSIGNMENT_VIEWS.has(key)){state.view="overview";history.replaceState(null,"",`#overview`);render();}});
 nav.addEventListener("click",event=>{const link=event.target.closest("[data-view]");if(link){state.view=link.dataset.view;app.classList.remove("menu-open");render();}});
 document.querySelectorAll("[data-role]").forEach(button=>button.addEventListener("click",()=>setRole(button.dataset.role)));
 search.addEventListener("input",()=>{state.query=search.value;render();});
@@ -321,7 +337,7 @@ async function initialise() {
     state.actor = actor;
     state.role = actor.role;
     environmentPill.textContent = actor.role === "manager" ? "Manager Workspace" : actor.role === "team_member" ? "Team Workspace" : "Client Workspace";
-    if (!ROUTE_POLICY[state.role].includes(state.view)) state.view = "overview";
+    if (!allowedRoutes(state.role).includes(state.view)) state.view = "overview";
     history.replaceState(null, "",`#${state.view}`);
     await loadRoleData(state.role, actor);
   } catch (error) {

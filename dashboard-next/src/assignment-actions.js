@@ -57,9 +57,39 @@ async function requestJson(path, options = {}) {
   return payload;
 }
 
+function capabilityEnabled(actor, capabilities) {
+  if (!actor || actor.role === "client") return false;
+  if (capabilities && typeof capabilities.assignmentsEnabled === "boolean") {
+    return capabilities.assignmentsEnabled === true
+      && capabilities.roles?.[actor.role] === true;
+  }
+  return actor.agencyCapabilities?.assignmentsEnabled === true;
+}
+
 async function loadContext() {
-  const [sessionPayload, projectsPayload, teamPayload, assignmentPayload] = await Promise.all([
-    requestJson("/api/digital-den/session"),
+  const sessionPayload = await requestJson("/api/digital-den/session");
+  const actor = sessionPayload.actor;
+  let capabilities = null;
+  try {
+    const capabilityPayload = await requestJson("/api/digital-den/assignments/manage?view=capabilities");
+    capabilities = capabilityPayload.capabilities || null;
+  } catch {
+    capabilities = { assignmentsEnabled: false, roles: { manager: false, team_member: false, client: false } };
+  }
+
+  if (!capabilityEnabled(actor, capabilities)) {
+    return {
+      actor,
+      capabilities,
+      enabled: false,
+      projects: [],
+      team: [],
+      assignments: [],
+      paymentExecution: "disabled_shadow_obligation_only",
+    };
+  }
+
+  const [projectsPayload, teamPayload, assignmentPayload] = await Promise.all([
     requestJson("/api/digital-den/projects"),
     requestJson("/api/digital-den/team/manage").catch(error => {
       if (error.status === 403 || error.status === 404) return { team: [] };
@@ -68,7 +98,9 @@ async function loadContext() {
     requestJson("/api/digital-den/assignments/manage"),
   ]);
   return {
-    actor: sessionPayload.actor,
+    actor,
+    capabilities,
+    enabled: true,
     projects: projectsPayload.projects || [],
     team: teamPayload.team || [],
     assignments: assignmentPayload.assignments || [],
@@ -77,7 +109,7 @@ async function loadContext() {
 }
 
 function createForm(context) {
-  if (context.actor.role !== "manager") return "";
+  if (context.actor.role !== "manager" || !context.enabled) return "";
   const projectOptions = context.projects.map(project =>
     `<option value="${escapeHtml(project.projectId)}">${escapeHtml(project.title || project.projectId)}</option>`
   ).join("");
@@ -102,57 +134,86 @@ function createForm(context) {
   </section>`;
 }
 
+function actionAllowed(assignment, action) {
+  return Array.isArray(assignment.permittedActions) && assignment.permittedActions.includes(action);
+}
+
 function managerActions(assignment) {
-  return `
-    <form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="mark_under_review">
+  const forms = [];
+  if (actionAllowed(assignment, "mark_under_review")) {
+    forms.push(`<form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="mark_under_review">
       <button class="button secondary" type="submit">Mark under review</button>
-    </form>
-    <form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="approve">
-      <button class="button primary" type="submit">Approve work</button>
-    </form>
-    <form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="hold">
+    </form>`);
+  }
+  if (actionAllowed(assignment, "approve")) {
+    forms.push(`<form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="approve">
+      <button class="button primary" type="submit">Approve work / compensation</button>
+    </form>`);
+  }
+  if (actionAllowed(assignment, "hold")) {
+    forms.push(`<form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="hold">
       <label><strong>Hold reason</strong><input name="holdReason" required maxlength="2000"></label>
       <button class="button secondary" type="submit">Hold compensation</button>
-    </form>
-    <form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="mark_payable">
+    </form>`);
+  }
+  if (actionAllowed(assignment, "release_hold")) {
+    forms.push(`<form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="release_hold">
+      <button class="button secondary" type="submit">Release hold</button>
+    </form>`);
+  }
+  if (actionAllowed(assignment, "mark_payable")) {
+    forms.push(`<form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="mark_payable">
       <button class="button secondary" type="submit">Mark payable</button>
       <small>Payable means internally approved and awaiting a future authorised payment rail. No funds move now.</small>
-    </form>
-    <form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="adjust_compensation">
+    </form>`);
+  }
+  if (actionAllowed(assignment, "adjust_compensation")) {
+    forms.push(`<form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="adjust_compensation">
       <label><strong>Adjusted final compensation</strong><input name="finalCompensation" type="number" min="0" step="0.01" required></label>
       <label><strong>Adjustment reason</strong><input name="adjustmentReason" required maxlength="2000"></label>
       <button class="button secondary" type="submit">Record compensation adjustment</button>
-    </form>`;
+    </form>`);
+  }
+  if (actionAllowed(assignment, "reassign")) {
+    forms.push(`<form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="reassign">
+      <label><strong>New Team Member id</strong><input name="teamMemberId" required maxlength="80"></label>
+      <label><strong>New offered compensation</strong><input name="offeredCompensation" type="number" min="0" step="0.01" required></label>
+      <label><strong>Reassignment reason</strong><input name="reassignmentReason" required maxlength="2000"></label>
+      <button class="button secondary" type="submit">Reassign (supersede)</button>
+    </form>`);
+  }
+  if (actionAllowed(assignment, "cancel")) {
+    forms.push(`<form class="assignment-action-form list" style="gap:10px;margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="cancel">
+      <button class="button secondary" type="submit">Cancel assignment</button>
+    </form>`);
+  }
+  return forms.join("");
 }
 
 function teamMemberActions(assignment) {
-  if (assignment.assignmentStatus === "offered") {
-    return `
-      <div class="list" style="gap:10px;margin-top:12px">
-        <form class="assignment-action-form" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="accept">
-          <button class="button primary" type="submit">Accept assignment</button>
-        </form>
-        <form class="assignment-action-form" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="decline">
-          <button class="button secondary" type="submit">Decline assignment</button>
-        </form>
-      </div>`;
+  const forms = [];
+  if (actionAllowed(assignment, "accept")) {
+    forms.push(`<form class="assignment-action-form" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="accept">
+      <button class="button primary" type="submit">Accept assignment</button>
+    </form>`);
   }
-  if (assignment.assignmentStatus === "accepted") {
-    return `<div class="list" style="gap:10px;margin-top:12px">
-      <form class="assignment-action-form" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="start">
-        <button class="button secondary" type="submit">Mark in progress</button>
-      </form>
-      <form class="assignment-action-form" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="submit">
-        <button class="button primary" type="submit">Submit for review</button>
-      </form>
-    </div>`;
+  if (actionAllowed(assignment, "decline")) {
+    forms.push(`<form class="assignment-action-form" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="decline">
+      <button class="button secondary" type="submit">Decline assignment</button>
+    </form>`);
   }
-  if (assignment.assignmentStatus === "in_progress") {
-    return `<form class="assignment-action-form" style="margin-top:12px" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="submit">
+  if (actionAllowed(assignment, "start")) {
+    forms.push(`<form class="assignment-action-form" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="start">
+      <button class="button secondary" type="submit">Mark in progress</button>
+    </form>`);
+  }
+  if (actionAllowed(assignment, "submit")) {
+    forms.push(`<form class="assignment-action-form" data-assignment-id="${escapeHtml(assignment.assignmentId)}" data-version="${escapeHtml(assignment.version)}" data-action="submit">
       <button class="button primary" type="submit">Submit for review</button>
-    </form>`;
+    </form>`);
   }
-  return "";
+  if (!forms.length) return "";
+  return `<div class="list" style="gap:10px;margin-top:12px">${forms.join("")}</div>`;
 }
 
 function timeline(assignment) {
@@ -277,11 +338,15 @@ async function renderPage(force = false) {
   if (!force && content.dataset.assignmentsReady === "true") return;
   busy = true;
   content.dataset.assignmentsReady = "true";
-  content.innerHTML = `<section class="card panel"><div class="empty-state"><strong>Loading assignments…</strong><span>Applying role-based assignment and compensation visibility.</span></div></section>`;
+  content.innerHTML = `<section class="card panel"><div class="empty-state"><strong>Loading assignments…</strong><span>Checking server-authoritative assignment capability.</span></div></section>`;
   try {
     const context = await loadContext();
     if (context.actor.role === "client") {
       content.innerHTML = `<section class="card panel"><div class="empty-state"><strong>Assignments unavailable</strong><span>Clients cannot view internal assignments or Team Member compensation.</span></div></section>`;
+      return;
+    }
+    if (!context.enabled) {
+      content.innerHTML = `<section class="card panel"><div class="empty-state"><strong>Assignments unavailable</strong><span>Assignment compensation is disabled for this environment or the capability check failed closed.</span></div></section>`;
       return;
     }
     content.innerHTML = pageMarkup(context);

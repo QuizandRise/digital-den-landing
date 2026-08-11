@@ -20,6 +20,7 @@ assert.equal(PLATFORM_CONFIG.featureFlags.publicFreelancerProfiles, false);
 assert.equal(PLATFORM_CONFIG.featureFlags.realPaymentExecution, false);
 assert.equal(PLATFORM_CONFIG.featureFlags.stripeConnect, false);
 assert.equal(FEATURE_FLAGS.billing, false);
+assert.equal(FEATURE_FLAGS.assignments, false);
 
 assert.deepEqual(PROJECT_SOURCES, [
   "direct",
@@ -62,7 +63,16 @@ const assignmentUi = readFileSync("dashboard-next/src/assignment-actions.js", "u
 assert.match(assignmentUi, /assignment-compensation/);
 assert.match(assignmentUi, /Accept assignment/);
 assert.match(assignmentUi, /Clients cannot view internal assignments/);
+assert.match(assignmentUi, /view=capabilities/);
+assert.match(assignmentUi, /permittedActions/);
+assert.match(assignmentUi, /capability check failed closed|assignmentsEnabled/);
 assert.doesNotMatch(assignmentUi, /stripe\.com|createPayout|Stripe Connect/i);
+assert.doesNotMatch(assignmentUi, /data-action="mark_paid"/);
+
+const appSource = readFileSync("dashboard-next/src/app.js", "utf8");
+assert.match(appSource, /agencyCapabilities/);
+assert.match(appSource, /assignmentsEnabled/);
+assert.match(appSource, /allowedRoutes/);
 
 const indexHtml = readFileSync("dashboard-next/index.html", "utf8");
 assert.match(indexHtml, /Team Member/);
