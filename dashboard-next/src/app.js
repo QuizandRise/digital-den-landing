@@ -38,8 +38,8 @@ const descriptions = {
   overview:"Role-scoped project delivery visibility.", projects:"Projects visible within the current actor scope.",
   review:"Manager-controlled approval queue.", messages:"Authorised project conversations.", communication_control:"Communication policy, moderation rules and flagged-item visibility.",
   clients:"Client relationships, project load and recent activity.", team:"Invite team members and control project access.", audit:"Read-only operational history.",
-  assigned_work:"Workstreams assigned to this professional.", files:"Project files available to this role.", billing:"Read-only client billing visibility.",
-  financials:"Read-only organisational financial visibility.", earnings:"Read-only professional earnings visibility.",
+  assigned_work:"Workstreams assigned to this team member.", files:"Project files available to this role.", billing:"Read-only client billing visibility.",
+  financials:"Read-only organisational financial visibility.", earnings:"Read-only assigned compensation visibility (not a marketplace payout).",
 };
 
 const label = key => NAVIGATION[key]?.[1] ?? key.replaceAll("_", " ");
@@ -113,7 +113,7 @@ function renderNav(){
 function professionalOverview(){
   const activeCount = state.projects.filter(project => !["delivered", "cancelled"].includes(project.status)).length;
   const latest = state.projects[0]?.updated || "Not available";
-  return `<div class="stats-grid"><div class="card stat-card"><small>Assigned projects</small><strong>${state.projects.length}</strong><em>Project scoped</em></div><div class="card stat-card"><small>Active work</small><strong>${activeCount}</strong><em>Assigned delivery</em></div><div class="card stat-card"><small>Messages</small><strong>${state.messages.length}</strong><em>Project scoped</em></div><div class="card stat-card"><small>Files</small><strong>${state.files.length}</strong><em>Available to you</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Assigned work activity</h2><p>Your current Digital Den network workstreams inside ${PLATFORM_CONFIG.platformName}.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>Professional status</h2><p>Operational information for your assigned work.</p></div></div><div class="list"><div class="list-row"><span><strong>Recent project activity</strong><small>${escapeHtml(latest)}</small></span><span class="pill neutral">Available</span></div><div class="list-row"><span><strong>Messages and files</strong><small>Limited to assigned project scopes</small></span><span class="pill neutral">Scoped</span></div><div class="list-row"><span><strong>Earnings connection</strong><small>Payment integration is not enabled</small></span><span class="pill neutral">Pending integration</span></div></div></aside></div>`;
+  return `<div class="stats-grid"><div class="card stat-card"><small>Assigned projects</small><strong>${state.projects.length}</strong><em>Project scoped</em></div><div class="card stat-card"><small>Active work</small><strong>${activeCount}</strong><em>Assigned delivery</em></div><div class="card stat-card"><small>Messages</small><strong>${state.messages.length}</strong><em>Project scoped</em></div><div class="card stat-card"><small>Files</small><strong>${state.files.length}</strong><em>Available to you</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Assigned work activity</h2><p>Your current Digital Den agency assignments in ${PLATFORM_CONFIG.platformName}.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>Team member status</h2><p>Operational information for your assigned work.</p></div></div><div class="list"><div class="list-row"><span><strong>Recent project activity</strong><small>${escapeHtml(latest)}</small></span><span class="pill neutral">Assigned</span></div><div class="list-row"><span><strong>Messages and files</strong><small>Limited to assigned project scopes</small></span><span class="pill neutral">Scoped</span></div><div class="list-row"><span><strong>Compensation connection</strong><small>Real payment execution is not enabled</small></span><span class="pill neutral">Shadow only</span></div></div></aside></div>`;
 }
 
 function visibleProjects(){
@@ -152,9 +152,9 @@ function filesView(){
 }
 
 const FINANCIAL_LABELS = {
-  contractValue:"Contract value", clientPaid:"Client paid", clientOutstanding:"Client outstanding", platformFee:"Platform fee",
-  professionalAllocation:"Assigned earnings", approvedMilestoneEarnings:"Approved milestone earnings", professionalPaid:"Paid earnings",
-  professionalOutstanding:"Pending earnings", heldAmount:"Held amount", refundAmount:"Refund status", paymentStatus:"Payment status",
+  contractValue:"Client commercial amount", clientPaid:"Client paid", clientOutstanding:"Client outstanding", platformFee:"Agency overhead (internal)",
+  professionalAllocation:"Internal assignee compensation", approvedMilestoneEarnings:"Approved delivery milestones", professionalPaid:"Paid compensation",
+  professionalOutstanding:"Pending compensation", heldAmount:"Held amount", refundAmount:"Refund status", paymentStatus:"Payment status",
   settlementStatus:"Settlement status", settlementHistory:"Settlement history", invoiceStatus:"Invoice status", nextSettlementDate:"Next settlement date",
   milestones:"Payment milestones", receipts:"Receipts",
 };
@@ -162,8 +162,8 @@ const FINANCIAL_LABELS = {
 function financialView(){
   const record = normalizeFinancialRecord();
   const fields = FINANCIAL_FIELDS[state.role] || [];
-  const heading = state.role === "manager" ? "Financials" : state.role === "client" ? "Billing" : "Earnings";
-  return `<section class="card panel"><div class="panel-header"><div><h2>${heading}</h2><p>Read-only visibility architecture. Payments and settlements are not connected.</p></div><span class="pill neutral">Pending integration</span></div><div class="financial-grid">${fields.map(field => `<div class="financial-field"><small>${FINANCIAL_LABELS[field]}</small><strong>${escapeHtml(financialValue(record[field]))}</strong></div>`).join("")}</div><div class="notice">No payment, refund, invoice or payout action is enabled from this workspace.</div></section>`;
+  const heading = state.role === "manager" ? "Financials" : state.role === "client" ? "Billing" : "Compensation";
+  return `<section class="card panel"><div class="panel-header"><div><h2>${heading}</h2><p>Read-only agency financial visibility. Real payment execution remains disabled; shadow settlement only.</p></div><span class="pill neutral">Pending integration</span></div><div class="financial-grid">${fields.map(field => `<div class="financial-field"><small>${FINANCIAL_LABELS[field]}</small><strong>${escapeHtml(financialValue(record[field]))}</strong></div>`).join("")}</div><div class="notice">No payment, refund, invoice or payout action is enabled from this workspace. Digital Den is not a public marketplace payment engine.</div></section>`;
 }
 
 function tableView(headers, rows, intro=""){

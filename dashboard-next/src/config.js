@@ -36,5 +36,5 @@ export const NAVIGATION = Object.freeze({
   messages: ["◌", "Messages"], communication_control: ["⌁", "Communication control"],
   clients: ["♙", "Clients"], team: ["♧", "Team"], disputes: ["⚖", "Disputes"], audit: ["▤", "Audit log"],
   assigned_work: ["◆", "Assigned work"], files: ["▱", "Files"], billing: ["£", "Billing"],
-  financials: ["£", "Financials"], earnings: ["£", "Earnings"],
+  financials: ["£", "Financials"], earnings: ["£", "Compensation"],
 });

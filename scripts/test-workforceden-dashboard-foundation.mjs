@@ -5,12 +5,20 @@ import { FINANCIAL_FIELDS, normalizeFinancialRecord } from "../dashboard-next/sr
 import { PLATFORM_CONFIG, ROLE_CAPABILITIES, ROLE_PRESENTATION, normalizeProjectPresentation, roleLabel } from "../dashboard-next/src/platform-config.js";
 import { presentMessageForRole } from "../dashboard-next/src/message-presentation.js";
 
-assert.equal(PLATFORM_CONFIG.platformName, "WorkforceDen");
+assert.equal(PLATFORM_CONFIG.platformName, "Digital Den");
 assert.equal(PLATFORM_CONFIG.tenantId, null);
-assert.equal(roleLabel("team_member"), "Professional");
+assert.equal(PLATFORM_CONFIG.featureFlags.marketplace, false);
+assert.equal(PLATFORM_CONFIG.featureFlags.publicProviderDirectory, false);
+assert.equal(PLATFORM_CONFIG.featureFlags.workerBidding, false);
+assert.equal(PLATFORM_CONFIG.featureFlags.realPaymentExecution, false);
+assert.equal(roleLabel("team_member"), "Team Member");
 assert.equal(ROLE_CAPABILITIES.manager.startProject, true);
 assert.equal(ROLE_CAPABILITIES.client.startProject, false);
 assert.equal(ROLE_CAPABILITIES.team_member.startProject, false);
+assert.equal(ROLE_CAPABILITIES.manager.assignInternalResources, true);
+assert.equal(ROLE_CAPABILITIES.team_member.assignInternalResources, false);
+assert.equal(ROLE_CAPABILITIES.team_member.setClientPrice, false);
+assert.equal(ROLE_CAPABILITIES.client.viewInternalCompensation, false);
 assert.equal(ROLE_CAPABILITIES.manager.viewProjectAudit, true);
 assert.equal(ROLE_CAPABILITIES.client.viewProjectAudit, false);
 assert.equal(ROLE_CAPABILITIES.team_member.viewProjectAudit, false);
@@ -22,8 +30,8 @@ assert.ok(ROUTE_POLICY.client.includes("billing"));
 assert.ok(ROUTE_POLICY.team_member.includes("earnings"));
 
 const project = normalizeProjectPresentation({ id: "scope-only" });
-assert.deepEqual({ platform: project.platform, serviceBrand: project.serviceBrand, serviceType: project.serviceType, tenantId: project.tenantId }, {
-  platform: "workforceden", serviceBrand: "digital_den", serviceType: null, tenantId: null,
+assert.deepEqual({ platform: project.platform, serviceBrand: project.serviceBrand, serviceType: project.serviceType, tenantId: project.tenantId, projectSource: project.projectSource, isAgencyProject: project.isAgencyProject }, {
+  platform: "digital_den", serviceBrand: "digital_den", serviceType: null, tenantId: null, projectSource: "direct", isAgencyProject: true,
 });
 
 const financial = normalizeFinancialRecord();
@@ -70,6 +78,6 @@ assert.match(projectWorkspace, /actorRole\(\) === "team_member" \? "assigned_wor
 assert.match(projectWorkspace, /route\.tab === "audit" && !canViewProjectAudit \? "overview" : route\.tab/);
 assert.match(projectWorkspace, /canViewProjectAudit \? tabLink\(project, "audit", "Audit log", visibleTab\) : ""/);
 assert.match(projectWorkspace, /project\.returnRoute = currentRoute\(\) === "assigned_work" \? "assigned_work" : "projects"/);
-assert.match(projectWorkspace, /role === "manager" \? `<a class="button secondary project-quick-action" href="#team">Assign professional/);
+assert.match(projectWorkspace, /role === "manager" \? `<a class="button secondary project-quick-action" href="#team">Assign team member/);
 
-console.log("WorkforceDen dashboard foundation tests passed.");
+console.log("Digital Den agency dashboard foundation tests passed.");

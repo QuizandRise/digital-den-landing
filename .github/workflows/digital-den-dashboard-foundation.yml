@@ -8,6 +8,8 @@ on:
       - "src/contracts/**"
       - "scripts/validate-dashboard-foundation.mjs"
       - "scripts/test-digital-den-role-isolation.mjs"
+      - "scripts/test-digital-den-agency-scope.mjs"
+      - "scripts/test-workforceden-dashboard-foundation.mjs"
       - "docs/digital-den/**"
       - ".github/workflows/digital-den-dashboard-foundation.yml"
   push:
@@ -20,6 +22,8 @@ on:
       - "src/contracts/**"
       - "scripts/validate-dashboard-foundation.mjs"
       - "scripts/test-digital-den-role-isolation.mjs"
+      - "scripts/test-digital-den-agency-scope.mjs"
+      - "scripts/test-workforceden-dashboard-foundation.mjs"
       - "docs/digital-den/**"
       - ".github/workflows/digital-den-dashboard-foundation.yml"
 
@@ -48,3 +52,9 @@ jobs:
 
       - name: Test role isolation foundation
         run: node scripts/test-digital-den-role-isolation.mjs
+
+      - name: Test agency scope boundaries
+        run: node scripts/test-digital-den-agency-scope.mjs
+
+      - name: Test agency dashboard foundation
+        run: node scripts/test-workforceden-dashboard-foundation.mjs

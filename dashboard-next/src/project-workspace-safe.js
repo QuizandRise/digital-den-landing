@@ -147,7 +147,7 @@ function overviewPanel(project) {
       ${quickAction(project, "messages", "Open messages")}
       ${quickAction(project, "files", "Open files")}
       ${quickAction(project, "disputes", "Open disputes")}
-      ${role === "manager" ? `<a class="button secondary project-quick-action" href="#team">Assign professional</a><a class="button secondary project-quick-action" href="#clients">View client area</a>` : ""}
+      ${role === "manager" ? `<a class="button secondary project-quick-action" href="#team">Assign team member</a><a class="button secondary project-quick-action" href="#clients">View client area</a>` : ""}
     </div>
   </section>
 
