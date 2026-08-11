@@ -80,16 +80,21 @@ if (failures.length === 0) {
     [config, /projectMutations:\s*false/, "project mutations must remain disabled"],
     [config, /messagingMutations:\s*false/, "messaging mutations must remain disabled"],
     [config, /billing:\s*false/, "billing integration must remain disabled"],
+    [config, /assignments:\s*false/, "assignments feature flag must fail closed and not open from host alone"],
     [config, /baseUrl:\s*globalThis\.location\?\.origin/, "same-origin Digital Den API base is missing"],
     [config, /manager:\s*\[[^\]]*projects/, "manager route policy is missing"],
+    [config, /manager:\s*\[[^\]]*assignments/, "manager route policy must include assignments"],
     [config, /team_member:\s*\[[^\]]*assigned_work/, "team-member route policy must remain assigned-work scoped"],
+    [config, /team_member:\s*\[[^\]]*my_assignments/, "team-member route policy must include my_assignments"],
     [config, /client:\s*\[[^\]]*projects/, "client route policy is missing"],
+    [nextHtml, /assignment-actions\.js/, "assignment compensation module entry is missing"],
     [app, /createDashboardService/, "application must consume the dashboard service boundary"],
     [app, /service\.getActor/, "application must load actors through the service"],
     [app, /Promise\.all/, "application must load read-only workspace data through the adapter"],
     [app, /state\.loading/, "application loading state is missing"],
     [app, /state\.error/, "application error state is missing"],
-    [app, /ROUTE_POLICY\[state\.role\]/, "application must render navigation from route policy"],
+    [app, /allowedRoutesFor\(/, "application must filter navigation through capability-aware allowed routes"],
+    [app, /assignment-capability\.js/, "application must import shared assignment capability helpers"],
     [app, /rolePreview\.hidden\s*=\s*true/, "authenticated workspace must hide preview role switching"],
     [app, /FEATURE_FLAGS\.authentication\s*&&\s*state\.actor\s*&&\s*role\s*!==\s*state\.actor\.role/, "authenticated workspace must reject mock cross-role switching"],
     [app, /actor\.role/, "authenticated workspace must derive role from the server session"],
@@ -129,7 +134,8 @@ if (failures.length === 0) {
     [platformConfig, /assignInternalResources:\s*false/, "Team Member must not assign internal resources"],
     [platformConfig, /viewInternalCompensation:\s*false/, "Client/Team Member internal compensation visibility must remain false by default in capabilities"],
     [operatingModel, /Team Member must \*\*not\*\* receive global project-level compensation fields/, "operating model must document Team Member compensation boundary"],
-    [operatingModel, /separate assignment-level model/, "operating model must require a future assignment-level compensation model"],
+    [operatingModel, /DigitalDenProjectAssignment/, "operating model must reference assignment-level compensation records"],
+    [operatingModel, /payable.*future authorised payment rail|Real payment execution remains disabled/i, "operating model must keep payment execution disabled"],
     [bootstrapApiHint, /serverSideRoleEnforcementRequired:\s*true/, "bootstrap/mock role minting must not replace server-side role enforcement"],
   ];
   for (const [source, pattern, message] of structuredChecks) if (!pattern.test(source)) failures.push(message);
@@ -165,6 +171,28 @@ if (failures.length === 0) {
   }
   if (clientRouteMatch && /\baudit\b/.test(clientRouteMatch[1])) {
     failures.push("Client route policy must not include audit");
+  }
+  if (clientRouteMatch && /\bassignments\b|\bmy_assignments\b/.test(clientRouteMatch[1])) {
+    failures.push("Client route policy must not include internal assignment modules");
+  }
+  if (teamRouteMatch && /\bassignments\b/.test(teamRouteMatch[1]) && !/\bmy_assignments\b/.test(teamRouteMatch[1])) {
+    failures.push("Team Member route policy must use my_assignments, not manager assignments");
+  }
+  if (/assignments:\s*AUTHENTICATED_WORKSPACE/.test(config)) {
+    failures.push("assignments must not open solely because the workspace is authenticated");
+  }
+  const assignmentUiSource = await readFile("dashboard-next/src/assignment-actions.js", "utf8");
+  if (!/view=capabilities|assignmentsEnabled/.test(assignmentUiSource)) {
+    failures.push("assignment UI must use a server-authoritative capability check");
+  }
+  if (!/permittedActions/.test(assignmentUiSource)) {
+    failures.push("assignment UI must render state-aware actions from permittedActions");
+  }
+  if (!/<select name=["']teamMemberId["']/.test(assignmentUiSource)) {
+    failures.push("reassignment UI must use an authorised Team Member dropdown");
+  }
+  if (/New Team Member id/.test(assignmentUiSource)) {
+    failures.push("reassignment UI must not ask Managers to type MongoDB Team Member IDs");
   }
 
   if (/from\s+["'].\/mock-data\.js["']/.test(app)) failures.push("application must not import mock data directly");

@@ -26,8 +26,12 @@ assert.equal(ROLE_PRESENTATION.team_member.projectRoute, "assigned_work");
 assert.equal(ROLE_PRESENTATION.manager.projectRoute, "projects");
 assert.equal(ROLE_PRESENTATION.client.projectRoute, "projects");
 assert.ok(ROUTE_POLICY.manager.includes("financials"));
+assert.ok(ROUTE_POLICY.manager.includes("assignments"));
 assert.ok(ROUTE_POLICY.client.includes("billing"));
-assert.ok(ROUTE_POLICY.team_member.includes("earnings"));
+assert.ok(ROUTE_POLICY.team_member.includes("my_assignments"));
+assert.ok(!ROUTE_POLICY.client.includes("assignments"));
+assert.ok(!ROUTE_POLICY.client.includes("my_assignments"));
+assert.equal(ROLE_PRESENTATION.team_member.financeRoute, "my_assignments");
 
 const project = normalizeProjectPresentation({ id: "scope-only" });
 assert.deepEqual({ platform: project.platform, serviceBrand: project.serviceBrand, serviceType: project.serviceType, tenantId: project.tenantId, projectSource: project.projectSource, isAgencyProject: project.isAgencyProject }, {

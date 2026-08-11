@@ -4,6 +4,7 @@ import { attachTeamInvitationActions, teamInviteStatusPanel, teamMemberActions }
 import { PLATFORM_CONFIG, ROLE_CAPABILITIES, roleLabel } from "./platform-config.js";
 import { FINANCIAL_FIELDS, financialValue, normalizeFinancialRecord } from "./financial-contract.js";
 import { presentMessageForRole } from "./message-presentation.js";
+import { ASSIGNMENT_VIEWS, allowedRoutesFor } from "./assignment-capability.js";
 
 const service = createDashboardService();
 const state = {
@@ -39,10 +40,17 @@ const descriptions = {
   review:"Manager-controlled approval queue.", messages:"Authorised project conversations.", communication_control:"Communication policy, moderation rules and flagged-item visibility.",
   clients:"Client relationships, project load and recent activity.", team:"Invite team members and control project access.", audit:"Read-only operational history.",
   assigned_work:"Workstreams assigned to this team member.", files:"Project files available to this role.", billing:"Read-only client billing visibility.",
-  financials:"Read-only organisational financial visibility.", earnings:"Read-only assigned compensation visibility (not a marketplace payout).",
+  financials:"Read-only organisational financial visibility.",
+  assignments:"Manager-controlled internal assignments and compensation obligations.",
+  my_assignments:"Your assignment offers, acceptance actions and own compensation timeline.",
 };
 
 const label = key => NAVIGATION[key]?.[1] ?? key.replaceAll("_", " ");
+
+function allowedRoutes(role = state.role) {
+  return allowedRoutesFor(role, state.actor);
+}
+
 const badge = status => {
   const value=String(status).toLowerCase();
   const tone=value.includes("flag")||value.includes("high")||value.includes("suspended")?"red":value.includes("review")||value.includes("pending")||value.includes("capacity")||value.includes("invited")?"amber":value.includes("ready")||value.includes("available")||value.includes("clear")||value.includes("clean")||value.includes("delivered")||value.includes("active")?"green":"cyan";
@@ -99,7 +107,7 @@ async function setRole(role){
   if(!ROUTE_POLICY[role]) return;
   if(FEATURE_FLAGS.authentication && state.actor && role !== state.actor.role) return;
   state.role=role;
-  const allowed=ROUTE_POLICY[role];
+  const allowed=allowedRoutes(role);
   if(!allowed.includes(state.view)) state.view="overview";
   document.querySelectorAll("[data-role]").forEach(button=>button.classList.toggle("active",button.dataset.role===role));
   history.replaceState(null,"",`#${state.view}`);
@@ -107,7 +115,7 @@ async function setRole(role){
 }
 
 function renderNav(){
-  nav.innerHTML=ROUTE_POLICY[state.role].map(key=>`<a class="nav-link ${state.view===key?"active":""}" href="#${key}" data-view="${key}"><span aria-hidden="true">${NAVIGATION[key][0]}</span><span>${NAVIGATION[key][1]}</span></a>`).join("");
+  nav.innerHTML=allowedRoutes().map(key=>`<a class="nav-link ${state.view===key?"active":""}" href="#${key}" data-view="${key}"><span aria-hidden="true">${NAVIGATION[key][0]}</span><span>${NAVIGATION[key][1]}</span></a>`).join("");
 }
 
 function professionalOverview(){
@@ -210,7 +218,10 @@ function renderView(){
   if(state.view==="clients") return tableView(["Client","Primary contact","Projects","Status","Last activity"],state.clients.map(x=>`<tr><td><strong>${escapeHtml(x.name)}</strong></td><td>${escapeHtml(x.contact)}</td><td>${x.projects}</td><td>${badge(x.status)}</td><td>${escapeHtml(x.lastActivity)}</td></tr>`),"<h2>Client portfolio</h2><p>Relationship visibility for management.</p>");
   if(state.view==="team") return teamView();
   if(state.view==="audit") return tableView(["Event","Actor","Target","Time"],state.auditEvents.map(x=>`<tr><td><strong>${escapeHtml(x.event)}</strong></td><td>${escapeHtml(x.actor)}</td><td>${escapeHtml(x.target)}</td><td>${escapeHtml(x.time)}</td></tr>`),"<h2>Operational audit trail</h2><p>Read-only derived events.</p>");
-  if(["financials","billing","earnings"].includes(state.view)) return financialView();
+  if(["financials","billing"].includes(state.view)) return financialView();
+  if(["assignments","my_assignments"].includes(state.view)) {
+    return `<section class="card panel"><div class="empty-state"><strong>Loading assignments…</strong><span>Role-scoped assignment compensation module is initialising.</span></div></section>`;
+  }
   return `<section class="card panel"><div class="empty-state"><strong>${label(state.view)}</strong><span>This module boundary is reserved for a later integration phase.</span></div></section>`;
 }
 
@@ -296,7 +307,7 @@ content.addEventListener("submit", async event => {
   }
 });
 
-window.addEventListener("hashchange",()=>{const key=location.hash.slice(1)||"overview";if(ROUTE_POLICY[state.role].includes(key)){state.view=key;render();}});
+window.addEventListener("hashchange",()=>{const key=location.hash.slice(1)||"overview";if(allowedRoutes().includes(key)){state.view=key;render();}else if(ASSIGNMENT_VIEWS.includes(key)){state.view="overview";history.replaceState(null,"",`#overview`);render();}});
 nav.addEventListener("click",event=>{const link=event.target.closest("[data-view]");if(link){state.view=link.dataset.view;app.classList.remove("menu-open");render();}});
 document.querySelectorAll("[data-role]").forEach(button=>button.addEventListener("click",()=>setRole(button.dataset.role)));
 search.addEventListener("input",()=>{state.query=search.value;render();});
@@ -316,7 +327,7 @@ async function initialise() {
     state.actor = actor;
     state.role = actor.role;
     environmentPill.textContent = actor.role === "manager" ? "Manager Workspace" : actor.role === "team_member" ? "Team Workspace" : "Client Workspace";
-    if (!ROUTE_POLICY[state.role].includes(state.view)) state.view = "overview";
+    if (!allowedRoutes(state.role).includes(state.view)) state.view = "overview";
     history.replaceState(null, "",`#${state.view}`);
     await loadRoleData(state.role, actor);
   } catch (error) {

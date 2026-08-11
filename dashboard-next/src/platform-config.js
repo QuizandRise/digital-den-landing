@@ -23,7 +23,7 @@ export const ROLE_PRESENTATION = Object.freeze({
   manager: Object.freeze({ projectRoute: "projects", financeRoute: "financials" }),
   client: Object.freeze({ projectRoute: "projects", financeRoute: "billing" }),
   // Route key `earnings` retained for compatibility; UI label is compensation shell.
-  team_member: Object.freeze({ projectRoute: "assigned_work", financeRoute: "earnings" }),
+  team_member: Object.freeze({ projectRoute: "assigned_work", financeRoute: "my_assignments" }),
 });
 
 export const ROLE_CAPABILITIES = Object.freeze({

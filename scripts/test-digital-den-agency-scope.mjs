@@ -20,6 +20,7 @@ assert.equal(PLATFORM_CONFIG.featureFlags.publicFreelancerProfiles, false);
 assert.equal(PLATFORM_CONFIG.featureFlags.realPaymentExecution, false);
 assert.equal(PLATFORM_CONFIG.featureFlags.stripeConnect, false);
 assert.equal(FEATURE_FLAGS.billing, false);
+assert.equal(FEATURE_FLAGS.assignments, false);
 
 assert.deepEqual(PROJECT_SOURCES, [
   "direct",
@@ -46,12 +47,35 @@ assert.equal(ROLE_CAPABILITIES.team_member.setClientPrice, false);
 assert.equal(ROLE_CAPABILITIES.client.viewInternalCompensation, false);
 assert.equal(ROLE_CAPABILITIES.client.viewInternalNotes, false);
 
-assert.equal(NAVIGATION.earnings[1], "Compensation");
+assert.equal(NAVIGATION.my_assignments[1], "My Assignments");
+assert.equal(NAVIGATION.assignments[1], "Assignments");
 assert.ok(ROUTE_POLICY.team_member.includes("assigned_work"));
+assert.ok(ROUTE_POLICY.team_member.includes("my_assignments"));
+assert.ok(ROUTE_POLICY.manager.includes("assignments"));
 assert.ok(!ROUTE_POLICY.client.includes("team"));
+assert.ok(!ROUTE_POLICY.client.includes("assignments"));
+assert.ok(!ROUTE_POLICY.client.includes("my_assignments"));
 assert.ok(!ROUTE_POLICY.team_member.includes("clients"));
 assert.ok(!FINANCIAL_FIELDS.client.includes("professionalAllocation"));
 assert.ok(!FINANCIAL_FIELDS.client.includes("platformFee"));
+
+const assignmentUi = readFileSync("dashboard-next/src/assignment-actions.js", "utf8");
+assert.match(assignmentUi, /assignment-compensation/);
+assert.match(assignmentUi, /Accept assignment/);
+assert.match(assignmentUi, /Clients cannot view internal assignments/);
+assert.match(assignmentUi, /view=capabilities/);
+assert.match(assignmentUi, /permittedActions/);
+assert.match(assignmentUi, /capability check failed closed|assignmentsEnabled/);
+assert.doesNotMatch(assignmentUi, /stripe\.com|createPayout|Stripe Connect/i);
+assert.doesNotMatch(assignmentUi, /data-action="mark_paid"/);
+
+const appSource = readFileSync("dashboard-next/src/app.js", "utf8");
+assert.match(appSource, /assignment-capability\.js/);
+assert.match(appSource, /allowedRoutesFor/);
+const capabilitySource = readFileSync("dashboard-next/src/assignment-capability.js", "utf8");
+assert.match(capabilitySource, /agencyCapabilities/);
+assert.match(capabilitySource, /assignmentsEnabled/);
+assert.match(capabilitySource, /allowedRoutesFor/);
 
 const indexHtml = readFileSync("dashboard-next/index.html", "utf8");
 assert.match(indexHtml, /Team Member/);
