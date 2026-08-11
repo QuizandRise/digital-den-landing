@@ -9,9 +9,11 @@ const requiredFiles = [
   "docs/digital-den/DIGITAL_DEN_DASHBOARD_COMPLETION_AUDIT_V1.md",
   "docs/digital-den/DIGITAL_DEN_DASHBOARD_COMPLETION_ROADMAP_V1.md",
   "docs/digital-den/DIGITAL_DEN_DASHBOARD_STABILITY_GATES_V1.md",
+  "docs/digital-den/DIGITAL_DEN_AGENCY_OPERATING_MODEL_V1.md",
   "dashboard-next/index.html",
   "dashboard-next/assets/styles.css",
   "dashboard-next/src/config.js",
+  "dashboard-next/src/platform-config.js",
   "dashboard-next/src/mock-data.js",
   "dashboard-next/src/app.js",
   "dashboard-next/src/services/adapter-contract.js",
@@ -34,12 +36,15 @@ if (failures.length === 0) {
   const contracts = await readFile("src/contracts/digital-den.ts", "utf8");
   const nextHtml = await readFile("dashboard-next/index.html", "utf8");
   const config = await readFile("dashboard-next/src/config.js", "utf8");
+  const platformConfig = await readFile("dashboard-next/src/platform-config.js", "utf8");
   const app = await readFile("dashboard-next/src/app.js", "utf8");
   const adapterContract = await readFile("dashboard-next/src/services/adapter-contract.js", "utf8");
   const dashboardService = await readFile("dashboard-next/src/services/dashboard-service.js", "utf8");
   const mockAdapter = await readFile("dashboard-next/src/services/mock-dashboard-adapter.js", "utf8");
   const stagingAdapter = await readFile("dashboard-next/src/services/staging-http-adapter.js", "utf8");
   const sessionContract = await readFile("dashboard-next/src/session/session-contract.js", "utf8");
+  const operatingModel = await readFile("docs/digital-den/DIGITAL_DEN_AGENCY_OPERATING_MODEL_V1.md", "utf8");
+  const bootstrapApiHint = await readFile("dashboard-next/src/session/session-contract.js", "utf8");
 
   const legacyChecks = [
     [/<html\b/i, "dashboard.html must contain an <html> element"],
@@ -62,19 +67,23 @@ if (failures.length === 0) {
   for (const [pattern, message] of contractChecks) if (!pattern.test(contracts)) failures.push(message);
 
   const structuredChecks = [
-    [nextHtml, /data-environment=["']preview["']/, "structured workspace must declare preview environment"],
-    [nextHtml, /meta[^>]+robots[^>]+noindex,nofollow/i, "structured preview must be noindex,nofollow"],
+    // Authorised production architecture: production environment + authenticated workspace.
+    [nextHtml, /data-environment=["']production["']/, "structured workspace must declare the authorised production environment"],
+    [nextHtml, /meta[^>]+robots[^>]+noindex,nofollow/i, "authenticated workspace must remain noindex,nofollow"],
     [nextHtml, /type=["']module["'][^>]+src=["'].\/src\/app\.js["']/, "structured workspace module entry is missing"],
-    [config, /IS_STAGING_WORKSPACE/, "staging-only activation guard is missing"],
-    [config, /liveApi:\s*IS_STAGING_WORKSPACE/, "live API must be limited to the staging workspace alias"],
-    [config, /authentication:\s*IS_STAGING_WORKSPACE/, "authentication must be limited to the staging workspace alias"],
+    [config, /IS_STAGING_WORKSPACE/, "staging workspace detection guard is missing"],
+    [config, /IS_PRODUCTION_WORKSPACE/, "production workspace detection guard is missing"],
+    [config, /AUTHENTICATED_WORKSPACE/, "authenticated workspace composition is missing"],
+    [config, /IS_STAGING_WORKSPACE\s*\|\|\s*IS_PRODUCTION_WORKSPACE/, "authenticated workspace must intentionally include staging or production hosts"],
+    [config, /liveApi:\s*AUTHENTICATED_WORKSPACE/, "live API must follow the authenticated workspace configuration"],
+    [config, /authentication:\s*AUTHENTICATED_WORKSPACE/, "authentication must follow the authenticated workspace configuration"],
     [config, /projectMutations:\s*false/, "project mutations must remain disabled"],
     [config, /messagingMutations:\s*false/, "messaging mutations must remain disabled"],
     [config, /billing:\s*false/, "billing integration must remain disabled"],
     [config, /baseUrl:\s*globalThis\.location\?\.origin/, "same-origin Digital Den API base is missing"],
-    [config, /manager:\s*\[/, "manager route policy is missing"],
-    [config, /team_member:\s*\[/, "team-member route policy is missing"],
-    [config, /client:\s*\[/, "client route policy is missing"],
+    [config, /manager:\s*\[[^\]]*projects/, "manager route policy is missing"],
+    [config, /team_member:\s*\[[^\]]*assigned_work/, "team-member route policy must remain assigned-work scoped"],
+    [config, /client:\s*\[[^\]]*projects/, "client route policy is missing"],
     [app, /createDashboardService/, "application must consume the dashboard service boundary"],
     [app, /service\.getActor/, "application must load actors through the service"],
     [app, /Promise\.all/, "application must load read-only workspace data through the adapter"],
@@ -82,20 +91,22 @@ if (failures.length === 0) {
     [app, /state\.error/, "application error state is missing"],
     [app, /ROUTE_POLICY\[state\.role\]/, "application must render navigation from route policy"],
     [app, /rolePreview\.hidden\s*=\s*true/, "authenticated workspace must hide preview role switching"],
+    [app, /FEATURE_FLAGS\.authentication\s*&&\s*state\.actor\s*&&\s*role\s*!==\s*state\.actor\.role/, "authenticated workspace must reject mock cross-role switching"],
     [app, /actor\.role/, "authenticated workspace must derive role from the server session"],
     [adapterContract, /forbiddenWriteMethods/, "adapter contract must reject write methods"],
     [adapterContract, /getCommunicationPolicies/, "adapter contract is incomplete"],
     [dashboardService, /FEATURE_FLAGS\.liveApi/, "service selector must remain feature-flag controlled"],
     [dashboardService, /createMockDashboardAdapter/, "mock adapter fallback is missing"],
+    [dashboardService, /FEATURE_FLAGS\.liveApi[\s\S]*createStagingHttpAdapter/, "authenticated live API must use the HTTP adapter, not mock authority"],
     [mockAdapter, /assertReadOnlyAdapter/, "mock adapter must use read-only guard"],
     [mockAdapter, /teamMembers/, "mock adapter team binding is invalid"],
     [mockAdapter, /communicationPolicy/, "mock adapter policy binding is invalid"],
-    [stagingAdapter, /method:\s*["']GET["']/, "staging adapter must use GET only"],
-    [stagingAdapter, /credentials:\s*["']include["']/, "staging adapter must require authenticated session credentials"],
-    [stagingAdapter, /cache:\s*["']no-store["']/, "staging adapter must disable response caching"],
-    [stagingAdapter, /\/api\/digital-den\/session/, "staging adapter session route is missing"],
-    [stagingAdapter, /\/api\/digital-den\/projects/, "staging adapter project route is missing"],
-    [stagingAdapter, /mapProject/, "staging project payload mapping is missing"],
+    [stagingAdapter, /credentials:\s*["']include["']/, "authenticated adapter must require session credentials"],
+    [stagingAdapter, /cache:\s*["']no-store["']/, "authenticated adapter must disable response caching"],
+    [stagingAdapter, /\/api\/digital-den\/session/, "authenticated adapter session route is missing"],
+    [stagingAdapter, /\/api\/digital-den\/projects/, "authenticated adapter project route is missing"],
+    [stagingAdapter, /mapProject/, "authenticated project payload mapping is missing"],
+    [stagingAdapter, /method\s*=\s*["']GET["']/, "authenticated adapter must default read requests to GET"],
     [sessionContract, /secure-http-only-cookie/, "session transport must require a secure HTTP-only cookie"],
     [sessionContract, /localStorageAllowed:\s*false/, "session tokens must not be stored in localStorage"],
     [sessionContract, /queryStringTokenAllowed:\s*false/, "session tokens must not be accepted from query strings"],
@@ -108,8 +119,53 @@ if (failures.length === 0) {
     [accessJs, /credentials:\s*["']include["']/, "workspace access requests must include session credentials"],
     [accessJs, /\/api\/digital-den\/access\/request/, "access request endpoint is missing"],
     [accessJs, /\/api\/digital-den\/access\/consume/, "access consume endpoint is missing"],
+    [platformConfig, /platformName:\s*["']Digital Den["']/, "Digital Den must present as an agency platform name"],
+    [platformConfig, /marketplace:\s*false/, "marketplace capability must remain disabled"],
+    [platformConfig, /publicProviderDirectory:\s*false/, "public provider directory must remain disabled"],
+    [platformConfig, /workerBidding:\s*false/, "worker bidding must remain disabled"],
+    [platformConfig, /realPaymentExecution:\s*false/, "real payment execution must remain disabled"],
+    [platformConfig, /stripeConnect:\s*false/, "Stripe Connect must remain disabled"],
+    [platformConfig, /team_member:\s*"Team Member"/, "team_member must be labelled as Team Member"],
+    [platformConfig, /assignInternalResources:\s*false/, "Team Member must not assign internal resources"],
+    [platformConfig, /viewInternalCompensation:\s*false/, "Client/Team Member internal compensation visibility must remain false by default in capabilities"],
+    [operatingModel, /Team Member must \*\*not\*\* receive global project-level compensation fields/, "operating model must document Team Member compensation boundary"],
+    [operatingModel, /separate assignment-level model/, "operating model must require a future assignment-level compensation model"],
+    [bootstrapApiHint, /serverSideRoleEnforcementRequired:\s*true/, "bootstrap/mock role minting must not replace server-side role enforcement"],
   ];
   for (const [source, pattern, message] of structuredChecks) if (!pattern.test(source)) failures.push(message);
+
+  // Production must not treat mock preview role selection as authority.
+  if (!/FEATURE_FLAGS\.authentication/.test(app) || !/rolePreview\.hidden\s*=\s*true/.test(app)) {
+    failures.push("Production authentication must hide role preview and avoid mock role authority");
+  }
+  if (/createMockDashboardAdapter\(\)/.test(app)) {
+    failures.push("application must not instantiate the mock adapter directly");
+  }
+  if (/bootstrap-session/.test(stagingAdapter) || /bootstrap-session/.test(app)) {
+    failures.push("Production workspace must not call staging bootstrap role minting");
+  }
+
+  // Client and Team Member route restrictions.
+  if (!/team_member:\s*\[[^\]]*assigned_work[^\]]*\]/.test(config.replace(/\s+/g, " "))) {
+    failures.push("Team Member routes must remain assigned-work scoped");
+  }
+  if (/client:\s*\[[^\]]*team[^\]]*\]/.test(config.replace(/\s+/g, " ")) && /client:\s*\[[^\]]*("team"|'team')/.test(config)) {
+    failures.push("Client routes must not include team administration");
+  }
+  const clientRouteMatch = config.match(/client:\s*\[([^\]]+)\]/);
+  const teamRouteMatch = config.match(/team_member:\s*\[([^\]]+)\]/);
+  if (clientRouteMatch && /\bteam\b/.test(clientRouteMatch[1])) {
+    failures.push("Client route policy must not include team administration");
+  }
+  if (teamRouteMatch && /\bclients\b/.test(teamRouteMatch[1])) {
+    failures.push("Team Member route policy must not include clients directory");
+  }
+  if (teamRouteMatch && /\bfinancials\b/.test(teamRouteMatch[1])) {
+    failures.push("Team Member route policy must not include manager financials");
+  }
+  if (clientRouteMatch && /\baudit\b/.test(clientRouteMatch[1])) {
+    failures.push("Client route policy must not include audit");
+  }
 
   if (/from\s+["'].\/mock-data\.js["']/.test(app)) failures.push("application must not import mock data directly");
   if (/\?token=/.test(accessJs) || /localStorage/.test(accessJs)) failures.push("workspace access must not use query-string or localStorage tokens");
@@ -120,7 +176,7 @@ if (failures.length === 0) {
     [/mongodb(?:\+srv)?:\/\/[^\s"']+:[^\s"']+@/i, "MongoDB credential URI detected"],
     [/postgres(?:ql)?:\/\/[^\s"']+:[^\s"']+@/i, "PostgreSQL credential URI detected"],
   ];
-  const scannedSources = [legacyHtml, accessHtml, accessJs, contracts, nextHtml, config, app, adapterContract, dashboardService, mockAdapter, stagingAdapter, sessionContract];
+  const scannedSources = [legacyHtml, accessHtml, accessJs, contracts, nextHtml, config, platformConfig, app, adapterContract, dashboardService, mockAdapter, stagingAdapter, sessionContract];
   for (const [pattern, message] of forbiddenPatterns) {
     if (scannedSources.some(source => pattern.test(source))) failures.push(message);
   }

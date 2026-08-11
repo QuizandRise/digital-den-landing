@@ -24,7 +24,7 @@ async function loadActorRole() {
 
 function roleName(role) {
   if (role === "manager") return "Manager";
-  if (role === "team_member") return "Professional";
+  if (role === "team_member") return "Team Member";
   return "Client";
 }
 
