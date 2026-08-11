@@ -46,12 +46,23 @@ assert.equal(ROLE_CAPABILITIES.team_member.setClientPrice, false);
 assert.equal(ROLE_CAPABILITIES.client.viewInternalCompensation, false);
 assert.equal(ROLE_CAPABILITIES.client.viewInternalNotes, false);
 
-assert.equal(NAVIGATION.earnings[1], "Compensation");
+assert.equal(NAVIGATION.my_assignments[1], "My Assignments");
+assert.equal(NAVIGATION.assignments[1], "Assignments");
 assert.ok(ROUTE_POLICY.team_member.includes("assigned_work"));
+assert.ok(ROUTE_POLICY.team_member.includes("my_assignments"));
+assert.ok(ROUTE_POLICY.manager.includes("assignments"));
 assert.ok(!ROUTE_POLICY.client.includes("team"));
+assert.ok(!ROUTE_POLICY.client.includes("assignments"));
+assert.ok(!ROUTE_POLICY.client.includes("my_assignments"));
 assert.ok(!ROUTE_POLICY.team_member.includes("clients"));
 assert.ok(!FINANCIAL_FIELDS.client.includes("professionalAllocation"));
 assert.ok(!FINANCIAL_FIELDS.client.includes("platformFee"));
+
+const assignmentUi = readFileSync("dashboard-next/src/assignment-actions.js", "utf8");
+assert.match(assignmentUi, /assignment-compensation/);
+assert.match(assignmentUi, /Accept assignment/);
+assert.match(assignmentUi, /Clients cannot view internal assignments/);
+assert.doesNotMatch(assignmentUi, /stripe\.com|createPayout|Stripe Connect/i);
 
 const indexHtml = readFileSync("dashboard-next/index.html", "utf8");
 assert.match(indexHtml, /Team Member/);

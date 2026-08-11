@@ -82,8 +82,11 @@ if (failures.length === 0) {
     [config, /billing:\s*false/, "billing integration must remain disabled"],
     [config, /baseUrl:\s*globalThis\.location\?\.origin/, "same-origin Digital Den API base is missing"],
     [config, /manager:\s*\[[^\]]*projects/, "manager route policy is missing"],
+    [config, /manager:\s*\[[^\]]*assignments/, "manager route policy must include assignments"],
     [config, /team_member:\s*\[[^\]]*assigned_work/, "team-member route policy must remain assigned-work scoped"],
+    [config, /team_member:\s*\[[^\]]*my_assignments/, "team-member route policy must include my_assignments"],
     [config, /client:\s*\[[^\]]*projects/, "client route policy is missing"],
+    [nextHtml, /assignment-actions\.js/, "assignment compensation module entry is missing"],
     [app, /createDashboardService/, "application must consume the dashboard service boundary"],
     [app, /service\.getActor/, "application must load actors through the service"],
     [app, /Promise\.all/, "application must load read-only workspace data through the adapter"],
@@ -129,7 +132,8 @@ if (failures.length === 0) {
     [platformConfig, /assignInternalResources:\s*false/, "Team Member must not assign internal resources"],
     [platformConfig, /viewInternalCompensation:\s*false/, "Client/Team Member internal compensation visibility must remain false by default in capabilities"],
     [operatingModel, /Team Member must \*\*not\*\* receive global project-level compensation fields/, "operating model must document Team Member compensation boundary"],
-    [operatingModel, /separate assignment-level model/, "operating model must require a future assignment-level compensation model"],
+    [operatingModel, /DigitalDenProjectAssignment/, "operating model must reference assignment-level compensation records"],
+    [operatingModel, /payable.*future authorised payment rail|Real payment execution remains disabled/i, "operating model must keep payment execution disabled"],
     [bootstrapApiHint, /serverSideRoleEnforcementRequired:\s*true/, "bootstrap/mock role minting must not replace server-side role enforcement"],
   ];
   for (const [source, pattern, message] of structuredChecks) if (!pattern.test(source)) failures.push(message);
@@ -165,6 +169,12 @@ if (failures.length === 0) {
   }
   if (clientRouteMatch && /\baudit\b/.test(clientRouteMatch[1])) {
     failures.push("Client route policy must not include audit");
+  }
+  if (clientRouteMatch && /\bassignments\b|\bmy_assignments\b/.test(clientRouteMatch[1])) {
+    failures.push("Client route policy must not include internal assignment modules");
+  }
+  if (teamRouteMatch && /\bassignments\b/.test(teamRouteMatch[1]) && !/\bmy_assignments\b/.test(teamRouteMatch[1])) {
+    failures.push("Team Member route policy must use my_assignments, not manager assignments");
   }
 
   if (/from\s+["'].\/mock-data\.js["']/.test(app)) failures.push("application must not import mock data directly");

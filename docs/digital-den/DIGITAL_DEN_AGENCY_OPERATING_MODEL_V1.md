@@ -131,15 +131,16 @@ Private source metadata must not appear in client APIs unless explicitly require
 
 Never expose `internalAssigneeCompensation` (or legacy contractor share fields) through a client response.
 
-### 7.1 Team Member compensation visibility (current vs future)
+### 7.1 Team Member compensation visibility (assignment-level)
 
 Current release policy:
 
-- Manager may view internal project compensation.
-- Client must never view internal compensation.
+- Manager may view internal project compensation and create assignment-level compensation offers.
+- Client must never view internal compensation or assignments.
 - Team Member must **not** receive global project-level compensation fields.
-
-Future Team Member compensation visibility requires a **separate assignment-level model** so each Team Member can see only their own agreed assignment compensation. That model is intentionally out of scope for the current agency-boundary alignment and must not be improvised by exposing project-level settlement shares.
+- Team Member compensation visibility is provided only through `DigitalDenProjectAssignment` records for their own assignments.
+- Accepted assignment compensation is preserved as `originalCompensation`; later Manager adjustments require a reason and audit before/after values.
+- `payable` means internally approved and awaiting a future authorised payment rail. Real payment execution remains disabled.
 
 ## 8. Payment-system boundary
 

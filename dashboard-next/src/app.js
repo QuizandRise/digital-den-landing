@@ -39,7 +39,9 @@ const descriptions = {
   review:"Manager-controlled approval queue.", messages:"Authorised project conversations.", communication_control:"Communication policy, moderation rules and flagged-item visibility.",
   clients:"Client relationships, project load and recent activity.", team:"Invite team members and control project access.", audit:"Read-only operational history.",
   assigned_work:"Workstreams assigned to this team member.", files:"Project files available to this role.", billing:"Read-only client billing visibility.",
-  financials:"Read-only organisational financial visibility.", earnings:"Read-only assigned compensation visibility (not a marketplace payout).",
+  financials:"Read-only organisational financial visibility.",
+  assignments:"Manager-controlled internal assignments and compensation obligations.",
+  my_assignments:"Your assignment offers, acceptance actions and own compensation timeline.",
 };
 
 const label = key => NAVIGATION[key]?.[1] ?? key.replaceAll("_", " ");
@@ -210,7 +212,10 @@ function renderView(){
   if(state.view==="clients") return tableView(["Client","Primary contact","Projects","Status","Last activity"],state.clients.map(x=>`<tr><td><strong>${escapeHtml(x.name)}</strong></td><td>${escapeHtml(x.contact)}</td><td>${x.projects}</td><td>${badge(x.status)}</td><td>${escapeHtml(x.lastActivity)}</td></tr>`),"<h2>Client portfolio</h2><p>Relationship visibility for management.</p>");
   if(state.view==="team") return teamView();
   if(state.view==="audit") return tableView(["Event","Actor","Target","Time"],state.auditEvents.map(x=>`<tr><td><strong>${escapeHtml(x.event)}</strong></td><td>${escapeHtml(x.actor)}</td><td>${escapeHtml(x.target)}</td><td>${escapeHtml(x.time)}</td></tr>`),"<h2>Operational audit trail</h2><p>Read-only derived events.</p>");
-  if(["financials","billing","earnings"].includes(state.view)) return financialView();
+  if(["financials","billing"].includes(state.view)) return financialView();
+  if(["assignments","my_assignments"].includes(state.view)) {
+    return `<section class="card panel"><div class="empty-state"><strong>Loading assignments…</strong><span>Role-scoped assignment compensation module is initialising.</span></div></section>`;
+  }
   return `<section class="card panel"><div class="empty-state"><strong>${label(state.view)}</strong><span>This module boundary is reserved for a later integration phase.</span></div></section>`;
 }
 

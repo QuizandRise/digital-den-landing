@@ -18,6 +18,7 @@ export const FEATURE_FLAGS = Object.freeze({
   fileUpload: false,
   billing: false,
   disputes: AUTHENTICATED_WORKSPACE,
+  assignments: AUTHENTICATED_WORKSPACE,
 });
 
 export const API_CONFIG = Object.freeze({
@@ -26,15 +27,17 @@ export const API_CONFIG = Object.freeze({
 });
 
 export const ROUTE_POLICY = Object.freeze({
-  manager: ["overview", "projects", "review", "messages", "communication_control", "clients", "team", "disputes", "financials", "audit"],
-  team_member: ["overview", "assigned_work", "messages", "files", "disputes", "earnings"],
+  manager: ["overview", "projects", "review", "messages", "communication_control", "clients", "team", "assignments", "disputes", "financials", "audit"],
+  team_member: ["overview", "assigned_work", "my_assignments", "messages", "files", "disputes"],
   client: ["overview", "projects", "messages", "files", "disputes", "billing"],
 });
 
 export const NAVIGATION = Object.freeze({
   overview: ["◫", "Overview"], projects: ["◇", "Projects"], review: ["✓", "Review queue"],
   messages: ["◌", "Messages"], communication_control: ["⌁", "Communication control"],
-  clients: ["♙", "Clients"], team: ["♧", "Team"], disputes: ["⚖", "Disputes"], audit: ["▤", "Audit log"],
-  assigned_work: ["◆", "Assigned work"], files: ["▱", "Files"], billing: ["£", "Billing"],
-  financials: ["£", "Financials"], earnings: ["£", "Compensation"],
+  clients: ["♙", "Clients"], team: ["♧", "Team"], assignments: ["▣", "Assignments"],
+  disputes: ["⚖", "Disputes"], audit: ["▤", "Audit log"],
+  assigned_work: ["◆", "Assigned work"], my_assignments: ["▣", "My Assignments"],
+  files: ["▱", "Files"], billing: ["£", "Billing"],
+  financials: ["£", "Financials"],
 });
