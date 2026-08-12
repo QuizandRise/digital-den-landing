@@ -1,4 +1,5 @@
 import { API_CONFIG } from "../config.js";
+import { invitationWasSent } from "../invitation-status.js";
 import { assertReadOnlyAdapter } from "./adapter-contract.js";
 
 const DEFAULT_TIMEOUT_MS = 8000;
@@ -159,7 +160,7 @@ export function createStagingHttpAdapter() {
         intent: "team-administration",
         body: input,
       });
-      return { member: mapTeamMember(payload.teamMember), invitationSent: Boolean(payload.invitationSent) };
+      return { member: mapTeamMember(payload.teamMember), invitationSent: invitationWasSent(payload) };
     },
     async updateTeamMember(input) {
       const payload = await requestJson("/api/digital-den/team/manage", {
@@ -167,7 +168,7 @@ export function createStagingHttpAdapter() {
         intent: "team-administration",
         body: input,
       });
-      return { member: mapTeamMember(payload.teamMember), invitationSent: Boolean(payload.invitationSent) };
+      return { member: mapTeamMember(payload.teamMember), invitationSent: invitationWasSent(payload) };
     },
     async resendTeamInvitation(userId) {
       const payload = await requestJson("/api/digital-den/team/manage", {
@@ -175,7 +176,7 @@ export function createStagingHttpAdapter() {
         intent: "team-administration",
         body: { userId, action: "resend_invitation" },
       });
-      return { member: mapTeamMember(payload.teamMember), invitationSent: Boolean(payload.invitationSent) };
+      return { member: mapTeamMember(payload.teamMember), invitationSent: invitationWasSent(payload) };
     },
     async getAuditEvents(role) {
       if (role !== "manager") return [];

@@ -248,6 +248,12 @@ if (failures.length === 0) {
   if (/mark_paid|stripe payout/i.test(lifecycleUiSource)) {
     failures.push("project lifecycle UI must not expose mark_paid or Stripe payout");
   }
+  if (/Mark funded/.test(lifecycleUiSource)) {
+    failures.push("project lifecycle UI must not present TEST simulation as funded");
+  }
+  if (!/record_test_simulation_only/.test(lifecycleUiSource)) {
+    failures.push("project lifecycle UI must use record_test_simulation_only");
+  }
 
   if (/from\s+["'].\/mock-data\.js["']/.test(app)) failures.push("application must not import mock data directly");
   if (/\?token=/.test(accessJs) || /localStorage/.test(accessJs)) failures.push("workspace access must not use query-string or localStorage tokens");

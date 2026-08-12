@@ -64,9 +64,11 @@ assert.match(lifecycleUi, /project-lifecycle/);
 assert.match(lifecycleUi, /projectLifecycleEnabled|projectLifecycleCapabilityEnabled/);
 assert.match(lifecycleUi, /permittedTransitions/);
 assert.match(lifecycleUi, /awaiting_payment|funded/);
-assert.match(lifecycleUi, /mark_funded_shadow/);
+assert.match(lifecycleUi, /record_test_simulation_only/);
+assert.match(lifecycleUi, /IS_PRODUCTION_WORKSPACE/);
 assert.match(lifecycleUi, /realPaymentExecutionEnabled/);
 assert.match(lifecycleUi, /Project lifecycle unavailable/);
+assert.doesNotMatch(lifecycleUi, /Mark funded/);
 assert.doesNotMatch(lifecycleUi, /mark_paid|stripe payout|Stripe/i);
 
 // Fail closed when capabilities missing/false.
@@ -91,5 +93,12 @@ const clientRoutes = allowedRoutesFor("client", {
 });
 assert.ok(!clientRoutes.includes("assignments"));
 assert.ok(!clientRoutes.some(key => ASSIGNMENT_VIEWS.includes(key)));
+
+const workspaceCss = readFileSync("dashboard-next/assets/project-workspace-safe.css", "utf8");
+assert.match(workspaceCss, /@media\(max-width:720px\)/);
+assert.match(workspaceCss, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+assert.match(workspaceCss, /@media\(max-width:420px\)/);
+assert.match(workspaceCss, /overflow-x:hidden/);
+assert.match(workspaceCss, /project-quick-actions\{display:grid;grid-template-columns:1fr\}/);
 
 console.log("Digital Den launch-readiness tests passed.");

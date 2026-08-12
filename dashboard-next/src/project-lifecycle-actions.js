@@ -1,3 +1,4 @@
+import { IS_PRODUCTION_WORKSPACE } from "./config.js";
 import { projectLifecycleCapabilityEnabled } from "./launch-readiness-capability.js";
 
 const API_BASE = globalThis.location?.origin ?? "";
@@ -74,10 +75,13 @@ function paymentProjectionPanel(payment) {
   if (!payment || payment.clientPaymentStatus === undefined) {
     return `<div class="notice">Payment projection is unavailable for this role.</div>`;
   }
+  const paidField = payment.amountPaidByClient === undefined
+    ? ""
+    : `<div class="financial-field"><small>Amount paid (projection)</small><strong>${money(payment.amountPaidByClient, payment.currency)}</strong></div>`;
   return `<div class="financial-grid">
     <div class="financial-field"><small>Client payment status</small><strong>${escapeHtml(String(payment.clientPaymentStatus).replaceAll("_", " "))}</strong></div>
     <div class="financial-field"><small>Amount</small><strong>${money(payment.amount, payment.currency)}</strong></div>
-    <div class="financial-field"><small>Amount paid (projection)</small><strong>${money(payment.amountPaidByClient, payment.currency)}</strong></div>
+    ${paidField}
     <div class="financial-field"><small>Settlement status</small><strong>${escapeHtml(payment.settlementStatus || "not_started")}</strong></div>
     <div class="financial-field"><small>Real payment execution</small><strong>${payment.realPaymentExecutionEnabled ? "Enabled" : "Disabled"}</strong></div>
   </div>
@@ -98,12 +102,12 @@ function transitionForm(project) {
 }
 
 function shadowFundedForm(project, role) {
-  if (role !== "manager") return "";
+  if (role !== "manager" || IS_PRODUCTION_WORKSPACE) return "";
   const payment = project.payment || {};
-  return `<form class="lifecycle-payment-form list" style="gap:10px;margin-top:12px" data-project-id="${escapeHtml(project.projectId)}" data-version="${escapeHtml(project.version)}" data-action="mark_funded_shadow">
-    <label for="lifecycle-funded-amount-${escapeHtml(project.projectId)}"><strong>Shadow funded amount</strong><input id="lifecycle-funded-amount-${escapeHtml(project.projectId)}" name="amountPaidByClient" type="number" min="0" step="0.01" value="${escapeHtml(payment.amount ?? project.clientCommercialAmount ?? 0)}"></label>
-    <button class="button secondary" type="submit" aria-label="Mark project funded shadow projection">Mark funded (shadow only)</button>
-    <small>No real charge or payout is executed. This records an internal projection only.</small>
+  return `<form class="lifecycle-payment-form list" style="gap:10px;margin-top:12px" data-project-id="${escapeHtml(project.projectId)}" data-version="${escapeHtml(project.version)}" data-action="record_test_simulation_only">
+    <label for="lifecycle-funded-amount-${escapeHtml(project.projectId)}"><strong>TEST simulation amount</strong><input id="lifecycle-funded-amount-${escapeHtml(project.projectId)}" name="amountPaidByClient" type="number" min="0" step="0.01" value="${escapeHtml(payment.amount ?? project.clientCommercialAmount ?? 0)}"></label>
+    <button class="button secondary" type="submit" aria-label="Record TEST payment simulation only">Record TEST simulation</button>
+    <small>TEST only. This never marks payment as funded, paid, or provider-confirmed. Hidden in Production.</small>
   </form>`;
 }
 
@@ -191,7 +195,7 @@ function bindForms(container) {
       const status = card?.querySelector(".lifecycle-status");
       if (status) {
         status.hidden = false;
-        status.textContent = "Recording shadow funded projection…";
+        status.textContent = "Recording TEST simulation…";
       }
       try {
         const data = Object.fromEntries(new FormData(form).entries());
@@ -200,12 +204,12 @@ function bindForms(container) {
           body: JSON.stringify({
             projectId: form.dataset.projectId,
             expectedVersion: Number(form.dataset.version),
-            action: "mark_funded_shadow",
+            action: "record_test_simulation_only",
             amountPaidByClient: Number(data.amountPaidByClient),
-            idempotencyKey: idempotencyKey("mark_funded_shadow"),
+            idempotencyKey: idempotencyKey("record_test_simulation_only"),
           }),
         });
-        if (status) status.textContent = "Shadow funded projection recorded. No payment was executed.";
+        if (status) status.textContent = "TEST simulation recorded. Payment is not funded or provider-confirmed.";
         await refreshAll(true);
       } catch (error) {
         if (status) status.textContent = error.message;
