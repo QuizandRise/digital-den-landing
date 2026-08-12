@@ -68,7 +68,12 @@ function loadingState(message="Loading workspace data…") {
 }
 
 function errorState() {
-  return `<section class="card panel"><div class="empty-state"><strong>Workspace data could not be loaded</strong><span>${state.error?.message ?? "Unknown adapter error."}</span></div></section>`;
+  const message = state.error?.message ?? "Unknown adapter error.";
+  if (state.error?.status === 401 || /session has ended|UNAUTHENTICATED|401|403|Forbidden/i.test(message)) {
+    const returnTo = `/dashboard-next/${location.hash || "#overview"}`;
+    return `<section class="card panel"><div class="empty-state"><strong>Your secure session has ended</strong><span>Request a new access link to continue. You will return to the same view after verification.</span><p><a class="button primary" href="../workspace-access.html?returnTo=${encodeURIComponent(returnTo)}">Send me a secure link</a></p></div></section>`;
+  }
+  return `<section class="card panel"><div class="empty-state"><strong>Workspace data could not be loaded</strong><span>${escapeHtml(message)}</span></div></section>`;
 }
 
 function setIdentity(actor) {
@@ -141,15 +146,40 @@ function projectCards(){
   return list.map(project=>`<article class="project-card"><div class="project-head"><div><h3>${escapeHtml(project.title)}</h3><div class="meta">${escapeHtml(project.id)} · ${escapeHtml(project.service)}</div></div>${badge(project.status)}</div><div class="progress" aria-label="${project.progress}% complete"><span style="width:${project.progress}%"></span></div><div class="meta">${project.progress}% complete · Updated ${escapeHtml(project.updated)}</div></article>`).join("");
 }
 
+function newProjectForm() {
+  const email = escapeHtml(state.actor?.email || "");
+  const name = escapeHtml(state.actor?.displayName || state.actor?.name || "Client");
+  const company = escapeHtml(state.actor?.companyName || "");
+  return `<section class="card panel" id="new-project-panel" style="margin-bottom:18px"><div class="panel-header"><div><h2>Start a new project</h2><p>This request is attached to your verified Digital Den account. Your email cannot be changed here.</p></div></div>
+    <form id="client-new-project-form" class="list" style="gap:12px">
+      <label><strong>Verified name</strong><input value="${name}" readonly></label>
+      <label><strong>Verified email</strong><input type="email" value="${email}" readonly></label>
+      <label><strong>Company or brand</strong><input value="${company}" readonly></label>
+      <label><strong>Service</strong><input id="new-project-category" required maxlength="160" placeholder="Website design, brand identity, maintenance…"></label>
+      <label><strong>Brief</strong><textarea id="new-project-notes" maxlength="5000" placeholder="Describe the new work, a follow-up, or a paid change."></textarea></label>
+      <label><strong>Request type</strong><select id="new-project-kind"><option value="new_project">New project</option><option value="follow_up">Additional work on an existing project</option><option value="maintenance">Maintenance or support</option><option value="paid_change">Paid change</option></select></label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="button primary" type="submit">Submit request</button></div>
+      <div id="new-project-status" class="notice" hidden></div>
+    </form>
+  </section>`;
+}
+
 function overview(){
   const readyCount = state.projects.filter(x=>["ready_for_delivery","delivered"].includes(x.status)).length;
   if(state.role === "team_member") return professionalOverview();
   if(state.role === "client") {
-    return `<div class="stats-grid"><div class="card stat-card"><small>Your projects</small><strong>${state.projects.length}</strong><em>Securely scoped</em></div><div class="card stat-card"><small>Project messages</small><strong>${state.messages.length}</strong><em>Read-only visibility</em></div><div class="card stat-card"><small>Available files</small><strong>${state.files.length}</strong><em>Project scoped</em></div><div class="card stat-card"><small>Ready to deliver</small><strong>${readyCount}</strong><em>Delivery status</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Your Digital Den projects</h2><p>Only projects linked to your verified email are visible.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>Secure access</h2><p>Authenticated client workspace.</p></div></div><div class="list"><div class="list-row"><span><strong>Live project data</strong><small>Read from Digital Den API</small></span><span class="pill neutral">On</span></div><div class="list-row"><span><strong>Client session</strong><small>HTTP-only secure session</small></span><span class="pill neutral">Active</span></div><div class="list-row"><span><strong>Write operations</strong><small>Updates and payments</small></span><span class="pill neutral">Off</span></div></div><div class="notice" style="margin-top:14px">Your workspace is connected securely to your Digital Den project records.</div></aside></div>`;
+    const active = state.projects.filter(x => !["completed", "cancelled"].includes(x.status));
+    const completed = state.projects.filter(x => x.status === "completed");
+    const next = active[0]
+      ? `Continue ${escapeHtml(active[0].title)} — currently ${escapeHtml(String(active[0].status).replaceAll("_", " "))}.`
+      : "Start a new project when you are ready.";
+    return `<div class="stats-grid"><div class="card stat-card"><small>Your projects</small><strong>${state.projects.length}</strong><em>Active and completed</em></div><div class="card stat-card"><small>Waiting for you</small><strong>${active.filter(x=>String(x.status).includes("client")||String(x.status).includes("quotation")).length}</strong><em>Next action</em></div><div class="card stat-card"><small>Messages</small><strong>${state.messages.length}</strong><em>Project conversations</em></div><div class="card stat-card"><small>Delivered</small><strong>${completed.length}</strong><em>Completed work</em></div></div><section class="card panel"><div class="panel-header"><div><h2>What should I do next?</h2><p>${next}</p></div><button class="button primary" type="button" data-start-project>Start a new project</button></div></section><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Your Digital Den projects</h2><p>Only projects linked to your verified account are visible.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>This device</h2><p>Trusted session controls.</p></div></div><div class="list"><div class="list-row"><span><strong>Session</strong><small>HTTP-only trusted device</small></span><span class="pill neutral">Active</span></div></div><button class="button secondary" type="button" id="sign-out-device">Sign out of this device</button><button class="button secondary" type="button" id="sign-out-all" style="margin-top:8px">Sign out of all devices</button></aside></div>`;
   }
 
   const flagged = state.overview?.flaggedMessageCount ?? 0;
-  return `<div class="stats-grid"><div class="card stat-card"><small>Visible projects</small><strong>${state.projects.length}</strong><em>Role scoped</em></div><div class="card stat-card"><small>Awaiting review</small><strong>${state.role==="manager"?state.reviews.length:"—"}</strong><em>${state.role==="manager"?"Manager action required":"Not in this role"}</em></div><div class="card stat-card"><small>Ready to deliver</small><strong>${readyCount}</strong><em>All checks passed</em></div><div class="card stat-card"><small>Flagged messages</small><strong>${state.role==="manager"?flagged:"—"}</strong><em>Policy controlled</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Current projects</h2><p>Read through the isolated dashboard service.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>System state</h2><p>Authenticated production workspace.</p></div></div><div class="list"><div class="list-row"><span><strong>Live API</strong><small>External data connection</small></span><span class="pill neutral">${FEATURE_FLAGS.liveApi?"On":"Off"}</span></div><div class="list-row"><span><strong>Authentication</strong><small>Real session enforcement</small></span><span class="pill neutral">${FEATURE_FLAGS.authentication?"On":"Off"}</span></div><div class="list-row"><span><strong>Mutations</strong><small>Controlled operations</small></span><span class="pill neutral">${FEATURE_FLAGS.projectMutations?"On":"Off"}</span></div></div></aside></div>`;
+  const unread = state.overview?.unreadMessageCount ?? state.unreadCount ?? 0;
+  const quarantined = state.files.filter(file => /pending|quarantine|blocked/i.test(String(file.scan || file.availability))).length;
+  return `<div class="stats-grid"><div class="card stat-card"><small>New enquiries</small><strong>${state.projects.filter(x=>String(x.status).includes("pending")||String(x.status).includes("draft")).length}</strong><em>Awaiting quotation</em></div><div class="card stat-card"><small>Unread Client messages</small><strong>${unread}</strong><em>Project scoped</em></div><div class="card stat-card"><small>Deliveries to review</small><strong>${state.reviews.length}</strong><em>Manager action</em></div><div class="card stat-card"><small>Blocked files</small><strong>${quarantined}</strong><em>Scan or quarantine</em></div></div><div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Current projects</h2><p>Quotations, assignments, Client messages and deliveries in your Manager scope.</p></div></div>${projectCards()}</section><aside class="card panel"><div class="panel-header"><div><h2>What needs action</h2><p>Flagged communications: ${flagged}.</p></div></div><div class="list"><div class="list-row"><span><strong>Live API</strong><small>External data connection</small></span><span class="pill neutral">${FEATURE_FLAGS.liveApi?"On":"Off"}</span></div><div class="list-row"><span><strong>Authentication</strong><small>Trusted device session</small></span><span class="pill neutral">${FEATURE_FLAGS.authentication?"On":"Off"}</span></div></div></aside></div>`;
 }
 
 function messagesView(){
@@ -254,7 +284,7 @@ function renderView(){
   if(state.loading) return loadingState();
   if(state.error) return errorState();
   if(state.view==="overview") return overview();
-  if(state.view==="projects"||state.view==="assigned_work") return `${launchReadinessSlots(state.view)}<section class="card panel"><div class="panel-header"><div><h2>${label(state.view)}</h2><p>Authenticated project view.</p></div></div>${projectCards()}</section>`;
+  if(state.view==="projects"||state.view==="assigned_work") return `${launchReadinessSlots(state.view)}${state.role==="client"?newProjectForm():""}<section class="card panel"><div class="panel-header"><div><h2>${label(state.view)}</h2><p>Authenticated project view.</p></div></div>${projectCards()}</section>`;
   if(state.view==="review") return `${launchReadinessSlots("review")}${tableView(["Project","Submission","Owner","Waiting","Priority"],state.reviews.map(x=>`<tr><td><strong>${escapeHtml(x.project)}</strong></td><td>${escapeHtml(x.item)}</td><td>${escapeHtml(x.owner)}</td><td>${escapeHtml(x.age)}</td><td>${badge(x.priority)}</td></tr>`),reviewIntro())}`;
   if(state.view==="messages") return messagesView();
   if(state.view==="communication_control") return `<div class="content-grid"><section class="card panel"><div class="panel-header"><div><h2>Flagged communications</h2><p>Messages requiring policy review.</p></div></div>${state.messages.filter(x=>x.state==="flagged").map(x=>`<article class="policy-alert"><div><strong>${escapeHtml(x.project)}</strong><p>${escapeHtml(x.text)}</p><small>${escapeHtml(x.time)}</small></div>${badge(x.state)}</article>`).join("")||`<div class="empty-state"><strong>No flagged messages</strong><span>No policy review is currently required.</span></div>`}</section><aside class="card panel"><div class="panel-header"><div><h2>Policy rules</h2></div></div><div class="list">${state.communicationPolicy.map(x=>`<div class="list-row policy-row"><span><strong>${escapeHtml(x.rule)}</strong><small>${escapeHtml(x.action)}</small></span>${badge(x.state)}</div>`).join("")}</div></aside></div>`;
@@ -357,6 +387,127 @@ document.querySelectorAll("[data-role]").forEach(button=>button.addEventListener
 search.addEventListener("input",()=>{state.query=search.value;render();});
 document.querySelector("#mobile-menu-button").addEventListener("click",event=>{const open=app.classList.toggle("menu-open");event.currentTarget.setAttribute("aria-expanded",String(open));});
 
+content.addEventListener("click", async event => {
+  if (event.target.closest("[data-start-project]")) {
+    state.view = "projects";
+    history.replaceState(null, "", "#projects");
+    render();
+    return;
+  }
+  if (event.target.id === "sign-out-device") {
+    await fetch("/api/digital-den/session", { method: "DELETE", credentials: "include", cache: "no-store" });
+    location.replace("../workspace-access.html");
+  }
+  if (event.target.id === "sign-out-all") {
+    await fetch("/api/digital-den/session", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "revoke_all" }),
+    });
+    location.replace("../workspace-access.html");
+  }
+});
+
+if (newProjectButton) {
+  newProjectButton.addEventListener("click", () => {
+    state.view = "projects";
+    history.replaceState(null, "", "#projects");
+    render();
+  });
+}
+
+content.addEventListener("submit", async event => {
+  if (event.target.id !== "client-new-project-form") return;
+  event.preventDefault();
+  const statusBox = document.querySelector("#new-project-status");
+  const category = document.querySelector("#new-project-category")?.value.trim();
+  const notes = document.querySelector("#new-project-notes")?.value.trim() || "";
+  const kind = document.querySelector("#new-project-kind")?.value || "new_project";
+  if (!category) return;
+  statusBox.hidden = false;
+  statusBox.textContent = "Submitting your request…";
+  try {
+    const response = await fetch("/api/digital-den/projects/create", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", "X-Digital-Den-Intent": "client-project-create" },
+      body: JSON.stringify({ category, notes, idempotencyKey: `client-new-${crypto.randomUUID()}`, changeOrderKind: kind }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload?.error?.message || "Unable to start a new project right now.");
+    statusBox.textContent = payload.duplicate
+      ? "This request was already received. It is shown in your project list."
+      : "Your new project request is now in your workspace. A Manager has been notified.";
+    await loadRoleData(state.role);
+  } catch (error) {
+    statusBox.textContent = error.message;
+  }
+});
+
+const notificationsButton = document.querySelector("#notifications-button");
+
+async function refreshNotifications() {
+  try {
+    const response = await fetch("/api/digital-den/notifications/manage", { credentials: "include", cache: "no-store" });
+    if (!response.ok) return;
+    const payload = await response.json().catch(() => ({ notifications: [] }));
+    const count = document.querySelector("#notification-count");
+    if (count) {
+      count.hidden = !(payload.unreadCount > 0);
+      count.textContent = String(payload.unreadCount || 0);
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+if (notificationsButton) {
+  notificationsButton.addEventListener("click", async () => {
+    state.view = "overview";
+    const response = await fetch("/api/digital-den/notifications/manage", { credentials: "include", cache: "no-store" });
+    const payload = await response.json().catch(() => ({ notifications: [] }));
+    const count = document.querySelector("#notification-count");
+    if (count) {
+      count.hidden = !(payload.unreadCount > 0);
+      count.textContent = String(payload.unreadCount || 0);
+    }
+    const items = (payload.notifications || []).map(item => `<div class="list-row"><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.summary || "")}</small></span><a href="${escapeHtml(item.href || "#overview")}">Open</a></div>`).join("");
+    content.insertAdjacentHTML("afterbegin", `<section class="card panel" id="notification-centre"><div class="panel-header"><div><h2>Notifications</h2><p>Unread items across your projects.</p></div></div><div class="list">${items || "<div class='empty-state'><strong>No notifications</strong></div>"}</div></section>`);
+  });
+}
+
+if ("serviceWorker" in navigator && FEATURE_FLAGS.authentication) {
+  navigator.serviceWorker.register("./sw.js").catch(() => {});
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    const toast = document.querySelector("#toast-region");
+    if (toast) toast.textContent = "A workspace update is available. Reload to use the latest version.";
+  });
+}
+
+function setupInstallPrompt() {
+  const button = document.querySelector("#install-workspace-button");
+  const guidance = document.querySelector("#ios-install-guidance");
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  if (guidance) guidance.hidden = !isIos;
+  let deferred;
+  window.addEventListener("beforeinstallprompt", event => {
+    event.preventDefault();
+    deferred = event;
+    if (button) button.hidden = false;
+  });
+  button?.addEventListener("click", async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    await deferred.userChoice.catch(() => null);
+    deferred = null;
+    button.hidden = true;
+  });
+}
+
 async function initialise() {
   if (!FEATURE_FLAGS.authentication) {
     await setRole("manager");
@@ -374,10 +525,15 @@ async function initialise() {
     if (!allowedRoutes(state.role).includes(state.view)) state.view = "overview";
     history.replaceState(null, "",`#${state.view}`);
     await loadRoleData(state.role, actor);
+    await refreshNotifications();
+    setInterval(refreshNotifications, 30000);
+    setupInstallPrompt();
   } catch (error) {
     const message = error instanceof Error ? error.message : "Authentication required";
-    if (message.toLowerCase().includes("authentication required")) {
-      location.replace("../workspace-access.html");
+    if (message.toLowerCase().includes("authentication required") || message.toLowerCase().includes("session has ended") || error.status === 401) {
+      const returnTo = `${location.pathname}${location.hash}`;
+      sessionStorage.setItem("dd.returnTo", returnTo.startsWith("/dashboard-next") ? returnTo : `/dashboard-next/${location.hash || "#overview"}`);
+      location.replace(`../workspace-access.html?returnTo=${encodeURIComponent(sessionStorage.getItem("dd.returnTo"))}`);
       return;
     }
     state.error = error instanceof Error ? error : new Error("Unable to initialise authenticated workspace");

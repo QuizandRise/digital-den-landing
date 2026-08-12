@@ -26,6 +26,9 @@ const requiredFiles = [
   "dashboard-next/src/services/mock-dashboard-adapter.js",
   "dashboard-next/src/services/staging-http-adapter.js",
   "dashboard-next/src/session/session-contract.js",
+  "dashboard-next/manifest.webmanifest",
+  "dashboard-next/sw.js",
+  "dashboard-next/offline.html",
 ];
 
 const failures = [];

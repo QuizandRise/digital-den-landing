@@ -25,7 +25,7 @@ assert.equal(teamOverview.flaggedMessageCount, 0, "Team-member overview must not
 assert.equal(clientOverview.flaggedMessageCount, 0, "Client overview must not expose moderation count");
 
 assert.equal(ROLE_CAPABILITIES.manager.startProject, true, "Manager may retain the New project action");
-assert.equal(ROLE_CAPABILITIES.client.startProject, false, "Client project creation is not enabled by current policy");
+assert.equal(ROLE_CAPABILITIES.client.startProject, true, "Authenticated Clients may start a new project from the workspace");
 assert.equal(ROLE_CAPABILITIES.team_member.startProject, false, "Team Member must not see the New project action");
 assert.equal(ROLE_CAPABILITIES.manager.viewProjectAudit, true, "Manager may view project audit information");
 assert.equal(ROLE_CAPABILITIES.client.viewProjectAudit, false, "Client must not view project audit information");

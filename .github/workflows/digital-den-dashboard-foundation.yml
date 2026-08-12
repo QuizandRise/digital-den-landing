@@ -12,6 +12,7 @@ on:
       - "scripts/test-digital-den-assignment-capability.mjs"
       - "scripts/test-digital-den-launch-readiness.mjs"
       - "scripts/test-digital-den-invitation-status.mjs"
+      - "scripts/test-digital-den-client-workspace.mjs"
       - "scripts/test-workforceden-dashboard-foundation.mjs"
       - "docs/digital-den/**"
       - ".github/workflows/digital-den-dashboard-foundation.yml"
@@ -29,6 +30,7 @@ on:
       - "scripts/test-digital-den-assignment-capability.mjs"
       - "scripts/test-digital-den-launch-readiness.mjs"
       - "scripts/test-digital-den-invitation-status.mjs"
+      - "scripts/test-digital-den-client-workspace.mjs"
       - "scripts/test-workforceden-dashboard-foundation.mjs"
       - "docs/digital-den/**"
       - ".github/workflows/digital-den-dashboard-foundation.yml"
@@ -70,6 +72,9 @@ jobs:
 
       - name: Test invitation status mapping
         run: node scripts/test-digital-den-invitation-status.mjs
+
+      - name: Test client workspace and PWA
+        run: node scripts/test-digital-den-client-workspace.mjs
 
       - name: Test agency dashboard foundation
         run: node scripts/test-workforceden-dashboard-foundation.mjs
