@@ -51,7 +51,10 @@ function mapActor(actor) {
   const label = role === "manager" ? "Manager" : role === "team_member" ? "Team Member" : "Client";
   return {
     ...actor,
-    name: label,
+    name: actor?.displayName || label,
+    email: actor?.email ?? "",
+    displayName: actor?.displayName ?? "",
+    companyName: actor?.companyName ?? "",
     initials: label.split(" ").map(part => part[0]).join("").slice(0, 2).toUpperCase(),
     label: `${label} workspace`,
   };

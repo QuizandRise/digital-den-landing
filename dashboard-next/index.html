@@ -6,6 +6,10 @@
   <meta name="theme-color" content="#07090d">
   <meta name="robots" content="noindex,nofollow">
   <title>Digital Den Workspace</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Digital Den">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
@@ -48,8 +52,9 @@
         </label>
         <div class="topbar-actions">
           <span id="environment-pill" class="pill neutral">Secure Workspace</span>
-          <button class="button secondary" type="button" disabled title="Notifications will be connected in a later phase">Notifications</button>
-          <button id="new-project-button" class="button primary" type="button" disabled title="New project requests are submitted through the Digital Den project brief">New project</button>
+          <button id="notifications-button" class="button secondary" type="button" aria-label="Notifications">Notifications <span id="notification-count" class="pill neutral" hidden>0</span></button>
+          <button id="install-workspace-button" class="button secondary" type="button" hidden>Install workspace</button>
+          <button id="new-project-button" class="button primary" type="button">Start a new project</button>
         </div>
       </header>
 
@@ -68,6 +73,7 @@
       </section>
 
       <section id="workspace-content" class="workspace-content" aria-live="polite"></section>
+      <p id="ios-install-guidance" class="meta" hidden style="padding:0 20px 16px">On iPhone or iPad, open Share and choose Add to Home Screen to install Digital Den Workspace.</p>
     </main>
   </div>
 

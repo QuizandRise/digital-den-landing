@@ -40,7 +40,7 @@ export const ROLE_CAPABILITIES = Object.freeze({
   }),
   client: Object.freeze({
     manageProjects: false,
-    startProject: false,
+    startProject: true,
     viewClients: false,
     viewInternalFinancials: false,
     viewProjectAudit: false,

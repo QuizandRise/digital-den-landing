@@ -1,6 +1,6 @@
 const API_BASE = globalThis.location?.origin ?? "";
-const MAX_BYTES = 10 * 1024 * 1024;
-const ALLOWED_TYPES = new Set([
+const FALLBACK_MAX_BYTES = 10 * 1024 * 1024;
+const FALLBACK_TYPES = [
   "application/pdf",
   "image/jpeg",
   "image/png",
@@ -8,9 +8,33 @@ const ALLOWED_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-]);
+];
+
+const EXTENSIONS = {
+  "image/jpeg": ".jpg,.jpeg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "image/svg+xml": ".svg",
+  "application/pdf": ".pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
+  "text/plain": ".txt",
+  "text/csv": ".csv",
+  "video/mp4": ".mp4",
+  "video/quicktime": ".mov",
+  "video/webm": ".webm",
+  "audio/mpeg": ".mp3",
+  "audio/wav": ".wav",
+  "audio/x-wav": ".wav",
+  "audio/mp4": ".m4a",
+  "audio/x-m4a": ".m4a",
+  "application/zip": ".zip",
+  "application/x-zip-compressed": ".zip",
+};
 
 let context = null;
+let limits = null;
 
 async function requestJson(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -38,6 +62,31 @@ function escapeHtml(value) {
   }[char]));
 }
 
+function megabytes(bytes) {
+  return Math.max(1, Math.round(Number(bytes) / (1024 * 1024)));
+}
+
+async function loadLimits() {
+  if (limits) return limits;
+  try {
+    const payload = await requestJson("/api/digital-den/files/limits");
+    limits = {
+      maxBytes: Number(payload.limits?.maxBytes) || FALLBACK_MAX_BYTES,
+      allowedTypes: Array.isArray(payload.limits?.allowedTypes) && payload.limits.allowedTypes.length
+        ? payload.limits.allowedTypes
+        : FALLBACK_TYPES,
+      note: payload.limits?.note || "Files remain quarantined until security scanning is complete.",
+    };
+  } catch {
+    limits = {
+      maxBytes: FALLBACK_MAX_BYTES,
+      allowedTypes: FALLBACK_TYPES,
+      note: "Maximum 10 MB until the server reports the authorised limit. Files remain quarantined until security scanning is complete.",
+    };
+  }
+  return limits;
+}
+
 async function loadContext() {
   if (context) return context;
   const [sessionPayload, projectsPayload] = await Promise.all([
@@ -51,16 +100,21 @@ async function loadContext() {
   return context;
 }
 
-function uploadMarkup(projects) {
+function acceptList(types) {
+  return types.flatMap(type => String(EXTENSIONS[type] || "").split(",")).filter(Boolean).join(",");
+}
+
+function uploadMarkup(projects, fileLimits) {
   const options = projects.map(project =>
     `<option value="${escapeHtml(project.projectId)}">${escapeHtml(project.title || project.projectId)}</option>`
   ).join("");
+  const mb = megabytes(fileLimits.maxBytes);
 
   return `<section id="file-upload-panel" class="card panel" style="margin-bottom:18px">
-    <div class="panel-header"><div><h2>Upload a project file</h2><p>PDF, JPG, PNG, WEBP, DOCX, XLSX or PPTX. Maximum 10 MB. New files remain quarantined until security scanning is complete.</p></div></div>
+    <div class="panel-header"><div><h2>Upload a project file</h2><p>Authorised limit: ${mb} MB. ${escapeHtml(fileLimits.note)} Secrets, private keys, executables and database dumps are not accepted.</p></div></div>
     <form id="file-upload-form" class="list" style="gap:12px">
       <label><strong>Project</strong><select id="file-project" required>${options}</select></label>
-      <label><strong>File</strong><input id="file-input" type="file" required accept=".pdf,.jpg,.jpeg,.png,.webp,.docx,.xlsx,.pptx"></label>
+      <label><strong>File</strong><input id="file-input" type="file" required accept="${escapeHtml(acceptList(fileLimits.allowedTypes))}"></label>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <button id="file-upload-button" class="button primary" type="submit">Upload securely</button>
         <span id="file-upload-status" class="notice" hidden></span>
@@ -126,19 +180,21 @@ async function injectUploadPanel() {
   slot.dataset.ready = "true";
 
   let loaded;
+  let fileLimits;
   try {
-    loaded = await loadContext();
+    [loaded, fileLimits] = await Promise.all([loadContext(), loadLimits()]);
   } catch {
     slot.dataset.ready = "false";
     return;
   }
   if (!loaded.actor || !["manager", "team_member", "client"].includes(loaded.actor.role) || !loaded.projects.length) return;
 
-  slot.innerHTML = uploadMarkup(loaded.projects);
+  slot.innerHTML = uploadMarkup(loaded.projects, fileLimits);
   const form = content.querySelector("#file-upload-form");
   const input = content.querySelector("#file-input");
   const button = content.querySelector("#file-upload-button");
   const status = content.querySelector("#file-upload-status");
+  const allowed = new Set(fileLimits.allowedTypes);
 
   form.addEventListener("submit", async event => {
     event.preventDefault();
@@ -146,12 +202,12 @@ async function injectUploadPanel() {
     if (!file) return;
 
     status.hidden = false;
-    if (!ALLOWED_TYPES.has(file.type)) {
+    if (!allowed.has(file.type)) {
       status.textContent = "This file type is not allowed.";
       return;
     }
-    if (file.size < 1 || file.size > MAX_BYTES) {
-      status.textContent = "The file must be 10 MB or smaller.";
+    if (file.size < 1 || file.size > fileLimits.maxBytes) {
+      status.textContent = `The file must be ${megabytes(fileLimits.maxBytes)} MB or smaller.`;
       return;
     }
 

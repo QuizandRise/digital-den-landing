@@ -13,7 +13,7 @@ assert.equal(PLATFORM_CONFIG.featureFlags.workerBidding, false);
 assert.equal(PLATFORM_CONFIG.featureFlags.realPaymentExecution, false);
 assert.equal(roleLabel("team_member"), "Team Member");
 assert.equal(ROLE_CAPABILITIES.manager.startProject, true);
-assert.equal(ROLE_CAPABILITIES.client.startProject, false);
+assert.equal(ROLE_CAPABILITIES.client.startProject, true);
 assert.equal(ROLE_CAPABILITIES.team_member.startProject, false);
 assert.equal(ROLE_CAPABILITIES.manager.assignInternalResources, true);
 assert.equal(ROLE_CAPABILITIES.team_member.assignInternalResources, false);

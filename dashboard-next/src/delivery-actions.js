@@ -141,6 +141,10 @@ function submissionCard(submission, role) {
     </div>
     <div class="list">
       <div class="list-row"><span><strong>Notes</strong><small>${escapeHtml(submission.submissionNotes || "—")}</small></span></div>
+      <div class="list-row"><span><strong>Package</strong><small>${escapeHtml(submission.packageTitle || submission.submissionReference)}</small></span></div>
+      <div class="list-row"><span><strong>Summary</strong><small>${escapeHtml(submission.packageSummary || "—")}</small></span></div>
+      <div class="list-row"><span><strong>Completion report</strong><small>${escapeHtml(submission.completionReport || "—")}</small></span></div>
+      <div class="list-row"><span><strong>Known limitations</strong><small>${escapeHtml(submission.knownLimitations || "—")}</small></span></div>
       <div class="list-row"><span><strong>Files</strong><small>${escapeHtml(files)}</small></span><span><strong>Submitted</strong><small>${dateLabel(submission.submittedAt)}</small></span></div>
     </div>
     ${role === "manager" ? managerReviewForms(submission) : role === "client" ? clientReviewForms(submission) : ""}
