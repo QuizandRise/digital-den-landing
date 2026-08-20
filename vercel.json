@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/favicon.ico",
+      "destination": "/apple-touch-icon.png"
+    },
+    {
       "source": "/api/digital-den/:path*",
       "destination": "https://digital-den-api.vercel.app/api/digital-den/:path*"
     }
