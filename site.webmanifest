@@ -3,9 +3,18 @@
   "short_name": "Digital Den",
   "description": "Intelligent digital systems by Digital Den, a division of Quiz & Rise Ltd.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#07090d",
   "theme_color": "#07090d",
   "lang": "en-GB",
-  "categories": ["business", "productivity", "technology"]
+  "categories": ["business", "productivity", "technology"],
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
