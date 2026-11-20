@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Digital Den — Minimal enquiry (future path)</title>
+  <meta name="robots" content="noindex,nofollow">
+  <style>
+    :root {
+      --ink: #07090d;
+      --text: #f4f5f7;
+      --muted: #9aa0ab;
+      --line: rgba(255,255,255,.12);
+      --cyan: #51d7ff;
+      --violet: #8f6bff;
+      --panel: rgba(255,255,255,.04);
+      --ok: #7dffa4;
+      --err: #ff8f9f;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "DM Sans", sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 5%, rgba(143,107,255,.13), transparent 24%),
+        radial-gradient(circle at 90% 9%, rgba(81,215,255,.09), transparent 25%),
+        var(--ink);
+      line-height: 1.5;
+      padding: 28px 16px 48px;
+    }
+    .shell { width: min(640px, 100%); margin: 0 auto; }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; text-decoration: none; color: inherit; }
+    .mark {
+      width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center;
+      background: linear-gradient(145deg, var(--violet), var(--cyan)); color: #071017; font: 800 12px Manrope;
+    }
+    .brand strong { display: block; font: 800 15px Manrope; }
+    .brand small { display: block; color: var(--muted); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+    .card {
+      border: 1px solid var(--line); border-radius: 20px; background: var(--panel); padding: 26px;
+    }
+    .eyebrow { color: var(--cyan); text-transform: uppercase; letter-spacing: .16em; font-size: 10px; font-weight: 700; margin-bottom: 8px; }
+    h1 { font: 800 34px/1.05 Manrope; letter-spacing: -.04em; margin-bottom: 8px; }
+    .lede { color: var(--muted); font-size: 14px; margin-bottom: 18px; }
+    .gate {
+      border: 1px solid rgba(255,143,159,.35); background: rgba(255,143,159,.08);
+      border-radius: 12px; padding: 12px 14px; font-size: 12px; color: #ffd0d7; margin-bottom: 18px;
+    }
+    .field { margin-bottom: 12px; }
+    label { display: block; color: #d7d9de; font-size: 12px; margin-bottom: 5px; }
+    input, select, textarea {
+      width: 100%; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.12);
+      color: var(--text); border-radius: 11px; padding: 11px 12px; outline: none; font: inherit;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    .honeypot { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+    .consent { display: flex; gap: 10px; align-items: flex-start; margin: 8px 0 16px; font-size: 12px; color: #d7d9de; }
+    .consent input { width: 17px; height: 17px; margin-top: 2px; flex: 0 0 auto; }
+    button {
+      border: 0; border-radius: 999px; padding: 12px 18px; font: 700 13px Manrope; cursor: pointer;
+      background: linear-gradient(90deg, var(--cyan), var(--violet)); color: #071017;
+    }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .notice { display: none; margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: 13px; }
+    .notice.show { display: block; }
+    .notice.success { border: 1px solid rgba(125,255,164,.35); background: rgba(125,255,164,.08); color: var(--ok); }
+    .notice.error { border: 1px solid rgba(255,143,159,.35); background: rgba(255,143,159,.08); color: var(--err); }
+    .privacy p { margin-top: 10px; }
+    .privacy a { color: var(--cyan); }
+    input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible, button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+    .back { display: inline-block; margin-top: 18px; color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <a class="brand" href="./index.html">
+      <div class="mark">DD</div>
+      <div>
+        <strong>Digital Den</strong>
+        <small>Future enquiry path — not production cutover</small>
+      </div>
+    </a>
+
+    <div class="card">
+      <p class="eyebrow">Future replacement intake</p>
+      <h1>Minimal project enquiry</h1>
+      <p class="lede">Tell Digital Den which service you need, your name and email, and a short brief. A project URL is optional. Intended service: an agency enquiry reviewed by a person, with replies and any agreed work delivered manually by email. No marketplace, customer account or enquiry database.</p>
+
+      <div class="gate" role="note">
+        This page is prepared for a future cutover only. The live homepage form still uses its existing endpoint and is unchanged. Do not treat this page as production intake until the owner release gate is approved.
+      </div>
+
+      <div id="notice" class="notice" role="status" aria-live="polite"></div>
+
+      <section class="gate privacy" id="privacy-notice" aria-labelledby="privacy-heading">
+        <h2 id="privacy-heading">Enquiry privacy notice — draft</h2>
+        <p><strong>20 November 2026. Intake disabled. Pending details below must be resolved before release.</strong></p>
+        <p><strong>Who is responsible?</strong> Digital Den is a brand of Quiz &amp; Rise Ltd, company number SC848141, Inverness, Scotland, the controller of your personal information. Privacy questions and rights requests: <a href="mailto:privacy@quizandrise.com">privacy@quizandrise.com</a>. Mail routing for this privacy address was verified by an internal delivery test on 20 November 2026. Registered office: <strong>6 Sicily Road, Inverness, Scotland, IV2 3YL</strong> (<a href="https://find-and-update.company-information.service.gov.uk/company/SC848141">Companies House</a>).</p>
+        <p><strong>What and why?</strong> We would use your service choice, name, email and brief to assess your request, reply, prepare a quote and arrange any agreed agency work by email. These fields are required for this form; the project URL is optional. Without the required details we cannot process the form. Please provide only what is needed; no passwords, URL credentials, payment details, health information or unnecessary information about other people. There are no uploads, marketplace accounts or enquiry database.</p>
+        <p><strong>Lawful basis — pending owner verification.</strong> Proposed basis: Article 6(1)(b), where processing is necessary to take steps you request towards a contract with you, such as a quote. For general enquiries or a contact acting for a business, proposed Article 6(1)(f) interests are responding to genuine agency requests and managing business correspondence; protecting intake from abuse is a separate proposed legitimate interest. The owner must confirm necessity, the purpose-to-basis mapping and a legitimate interests assessment before collection. The acknowledgement below is neither consent as a lawful basis nor marketing consent. We would not add enquirers to marketing lists.</p>
+        <p><strong>Who sees it?</strong> Intended access is limited to authorised Quiz &amp; Rise Ltd staff handling Digital Den enquiries and Google Workspace for email. Hosting/security providers may process technical data such as IP addresses and request metadata to deliver and protect the form. Short-lived duplicate and abuse records and a browser session retry identifier may also be used. <strong>Actual host, provider legal entities, access, contracts, technical logs and retention: pending verification.</strong> We do not propose selling enquiries or passing them to marketplace providers. Any later need to share project information must be explained before sharing.</p>
+        <p><strong>Retention and international processing.</strong> For enquiries that do not become client contracts, we retain correspondence for up to <strong>12 months after our last substantive correspondence</strong>, then review and delete it unless a legal duty, ongoing claim or substantiated dispute requires longer preservation. We review the Digital Den enquiry mailbox monthly, including sent mail, labelled messages, trash and approved exports; a Gmail label alone does not delete messages. If a request becomes paid work, necessary client/transaction records follow the separate retention requirements communicated in the client agreement and applicable privacy information. Technical security logs, temporary duplicate indicators and provider backups follow their documented purpose-specific retention cycles. We use Google Workspace for email and Vercel for hosting/security; these providers or their subprocessors may process information outside the UK, including the United States, subject to their applicable data-processing agreements and lawful transfer safeguards. Contact <a href="mailto:privacy@quizandrise.com">privacy@quizandrise.com</a> for current transfer-safeguard details. UK-only storage is not promised. This notice must be checked against actual provider settings before live collection.</p>
+        <p><strong>Your rights.</strong> You can ask for access and correction, and for erasure or restriction where applicable. You may object to processing based on legitimate interests; portability applies only where its legal conditions are met. Contact the privacy email above. You can complain to the <a href="https://ico.org.uk/make-a-complaint/">Information Commissioner's Office (ICO)</a>; you do not have to contact us first. See <a href="https://ico.org.uk/global/privacy-notice/your-data-protection-rights">the ICO's explanation of rights</a>.</p>
+        <p><strong>Human handling.</strong> The intended process is manual review, with no automated decisions having legal or similarly significant effects and no profiling. Actual hosting/security behaviour must be checked before release. This disabled draft is not a claim of legal approval.</p>
+      </section>
+
+      <form id="minimal-enquiry-form" novalidate>
+        <div class="field honeypot" aria-hidden="true">
+          <label for="website">Website</label>
+          <input id="website" name="website" tabindex="-1" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" name="name" required maxlength="160" autocomplete="name">
+        </div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required maxlength="320" autocomplete="email">
+        </div>
+
+        <div class="field">
+          <label for="service">Service</label>
+          <select id="service" name="service" required>
+            <option value="">Choose a service</option>
+            <option>Brand Identity</option>
+            <option>Graphic Design</option>
+            <option>Website Design</option>
+            <option>Promotional Video</option>
+            <option>AI Images</option>
+            <option>Radio Advertisement</option>
+            <option>Social Media Content</option>
+            <option>Marketing Materials</option>
+            <option>Not sure yet</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="url">Project URL (optional)</label>
+          <input id="url" name="url" type="url" maxlength="500" placeholder="https://">
+        </div>
+
+        <div class="field">
+          <label for="brief">Brief</label>
+          <textarea id="brief" name="brief" required maxlength="4000" placeholder="What do you need, and any timing constraints?"></textarea>
+        </div>
+
+        <div class="consent">
+          <input id="privacy" name="privacy" type="checkbox" required>
+          <label for="privacy">
+            I have read the enquiry privacy notice. This is an acknowledgement, not consent to marketing or the lawful basis for handling my enquiry. Intake remains disabled pending owner approval.
+          </label>
+        </div>
+
+        <button id="submit" type="submit" disabled>Send enquiry</button>
+      </form>
+    </div>
+
+    <a class="back" href="./index.html">← Back to Digital Den site</a>
+  </div>
+
+  <script>
+    (function () {
+      var form = document.getElementById('minimal-enquiry-form');
+      var notice = document.getElementById('notice');
+      var submit = document.getElementById('submit');
+      var privacy = document.getElementById('privacy');
+      var ENDPOINT = '/api/minimal-enquiry';
+
+      // Keep disabled until approved privacy text and release code are reviewed together.
+      var RELEASE_APPROVED = false;
+      var inFlight = false;
+      var accepted = false;
+      var memoryKey = '';
+      function storage(action, value) {
+        try { return sessionStorage[action]('dd.minimalEnquiryIdempotency', value); }
+        catch (_) { return null; }
+      }
+      function updateSubmit() {
+        submit.disabled = !RELEASE_APPROVED || inFlight || accepted || !(form.checkValidity() && privacy.checked);
+      }
+
+      form.addEventListener('input', updateSubmit);
+      form.addEventListener('change', updateSubmit);
+
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        if (!RELEASE_APPROVED || inFlight || accepted) return;
+        if (!form.checkValidity() || !privacy.checked) {
+          form.reportValidity();
+          return;
+        }
+
+        inFlight = true;
+        submit.disabled = true;
+        submit.textContent = 'Sending…';
+        notice.className = 'notice';
+        notice.textContent = '';
+
+        var idempotencyKey = memoryKey || storage('getItem');
+        if (!/^[A-Za-z0-9_-]{1,128}$/.test(idempotencyKey || '')) {
+          idempotencyKey = (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+        }
+        memoryKey = idempotencyKey;
+        storage('setItem', idempotencyKey);
+
+        var payload = {
+          name: document.getElementById('name').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          service: document.getElementById('service').value,
+          brief: document.getElementById('brief').value.trim(),
+          url: document.getElementById('url').value.trim(),
+          website: document.getElementById('website').value,
+          privacyAccepted: privacy.checked === true,
+          idempotencyKey: idempotencyKey
+        };
+
+        try {
+          var response = await fetch(ENDPOINT, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Idempotency-Key': idempotencyKey
+            },
+            body: JSON.stringify(payload)
+          });
+          var result = await response.json().catch(function () { return {}; });
+          if (!response.ok || !result.ok) {
+            throw new Error(result.message || result.error || 'Enquiry could not be delivered.');
+          }
+          accepted = true;
+          notice.textContent = result.message || 'Gmail accepted the enquiry for processing.';
+          notice.className = 'notice show success';
+          storage('removeItem');
+          form.reset();
+          updateSubmit();
+        } catch (error) {
+          notice.textContent = (error && error.message) || 'Enquiry could not be delivered. Please try again later.';
+          notice.className = 'notice show error';
+        } finally {
+          inFlight = false;
+          submit.textContent = accepted ? 'Enquiry accepted' : 'Send enquiry';
+          updateSubmit();
+        }
+      });
+
+      updateSubmit();
+    })();
+  </script>
+</body>
+</html>
