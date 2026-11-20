@@ -178,6 +178,13 @@ export function createGoogleWorkspaceMailer(config, deps = {}) {
             } : { grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }),
           });
           const data = await res.json();
+          if (!res.ok || data?.error) {
+            // Categorise only public OAuth protocol error codes; never log
+            // provider error_description, client credentials or tokens.
+            const safe = new Set(['invalid_client', 'invalid_grant', 'invalid_scope', 'unauthorized_client', 'unsupported_grant_type']);
+            const category = typeof data?.error === 'string' && safe.has(data.error) ? data.error : 'other';
+            if (process.env.VERCEL_ENV === 'production') console.warn('DigitalDen OAuth rejection category:', category, 'HTTP:', Number.isInteger(res.status) ? res.status : 'unknown');
+          }
           // Fail closed if Google does not explicitly acknowledge a send-only
           // Bearer grant. Never persist tokens or expose provider error payloads.
           if (data?.error || (oauth && (typeof data?.token_type !== 'string' || !/^bearer$/i.test(data.token_type) ||
