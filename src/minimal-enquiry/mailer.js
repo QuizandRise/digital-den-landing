@@ -144,6 +144,9 @@ export function createGoogleWorkspaceMailer(config, deps = {}) {
   return {
     provider: 'google_workspace',
     async send({ to, from, subject, text, html }) {
+      // Only coarse provider-stage diagnostics in production. Never log tokens,
+      // OAuth responses, message bodies, mailbox addresses or reset links.
+      let providerStage = 'preflight';
       try {
         if (!validMailbox(to) || !validMailbox(from)) throw new Error('invalid_header');
         if (from !== config.fromAddress || !validSenderIdentity(config)) throw new Error('invalid_identity');
@@ -162,6 +165,7 @@ export function createGoogleWorkspaceMailer(config, deps = {}) {
           Buffer.from(html || `<pre>${escapeHtml(text)}</pre>`).toString('base64').match(/.{1,76}/g)?.join('\r\n') || '',
         ].join('\r\n');
         const jwt = oauth ? null : createGoogleServiceAccountJwt(config.google);
+        providerStage = 'oauth_exchange';
         const token = await withDeadline(async signal => {
           // Legacy JWT test seam is never used for refresh-token mode.
           if (!oauth && deps.tokenFetcher) return deps.tokenFetcher(jwt, signal);
@@ -182,6 +186,7 @@ export function createGoogleWorkspaceMailer(config, deps = {}) {
           return { ok: res.ok, accessToken: data?.access_token };
         }, deadline);
         if (!token?.ok || typeof token.accessToken !== 'string' || !/^[A-Za-z0-9._~+/-]+={0,2}$/.test(token.accessToken)) throw new Error('token_failed');
+        providerStage = 'gmail_send';
         return await withDeadline(async signal => {
           // Pin OAuth sends to the approved mailbox; the configured delegatedUser
           // is not an OAuth impersonation claim. Google must authorise this user.
@@ -195,7 +200,10 @@ export function createGoogleWorkspaceMailer(config, deps = {}) {
           if (!res.ok || data?.error || typeof data?.id !== 'string' || !/^[A-Za-z0-9_-]{1,256}$/.test(data.id)) throw new Error('missing_ack');
           return { ok: true, messageId: data.id };
         }, deadline);
-      } catch { return { ok: false, error: 'delivery_unconfirmed', messageId: null }; }
+      } catch {
+        if (process.env.VERCEL_ENV === 'production') console.warn('DigitalDen enquiry provider rejected at stage:', providerStage);
+        return { ok: false, error: 'delivery_unconfirmed', messageId: null };
+      }
     },
   };
 }
