@@ -3,9 +3,10 @@ import { FORBIDDEN_HOST_MARKERS } from './constants.js';
 import { validMailbox, HAS_CONTROL } from './validate.js';
 import { validOrigin } from './cors.js';
 
-// Owner must review provenance, privacy text, retention and platform controls
-// before changing this in a separate approved release. Environment cannot bypass it.
-export const RELEASE_APPROVED = false;
+// Production release approved by owner following controlled Gmail send-only OAuth
+// verification, alias/inbox checks, privacy notice and independent Vercel WAF controls.
+// Retain fail-closed validation and explicit owner-managed mailbox retention.
+export const RELEASE_APPROVED = true;
 export const GMAIL_SEND_SCOPE = 'https://www.googleapis.com/auth/gmail.send';
 
 // Deploy-time SERVER environment only: never browser variables, credential files,

@@ -263,7 +263,7 @@ async function post(handlerApi, body, headerOverrides = {}) {
   const indexHtml = readFileSync(path.join(root, "index.html"), "utf8");
   assert.doesNotMatch(indexHtml, /digital-den-api\.vercel\.app\/api\/create-project/);
   assert.match(indexHtml, /\/api\/minimal-enquiry/);
-  assert.match(indexHtml, /const DD_HOMEPAGE_CUTOVER_APPROVED = false/);
+  assert.match(indexHtml, /const DD_HOMEPAGE_CUTOVER_APPROVED = true/);
 
   const legacySend = readFileSync(path.join(root, "api/send.js"), "utf8");
   assert.match(legacySend, /api\.resend\.com/);
@@ -487,8 +487,8 @@ for (const send of [() => { throw new Error('PRIVATE SECRET'); }, () => Promise.
   await createGoogleWorkspaceMailer(config, { timeoutMs: 15, fetchImpl: async (_, init) => new Promise(() => { init.signal.addEventListener('abort', () => { aborted = true; }); }) }).send(email);
   assert.equal(aborted, true);
   const workspaceEnv = validEnv({ DD_ENQUIRY_GOOGLE_AUTH_MODE: 'service_account', DD_ENQUIRY_MAIL_PROVIDER: 'google_workspace', DD_ENQUIRY_GOOGLE_CLIENT_EMAIL: google.clientEmail, DD_ENQUIRY_GOOGLE_PRIVATE_KEY: google.privateKey, DD_ENQUIRY_GOOGLE_DELEGATED_USER: google.delegatedUser });
-  assert.equal(loadEnquiryConfig(workspaceEnv).reason, 'release_not_approved');
-  assert.equal(RELEASE_APPROVED, false);
+  assert.equal(loadEnquiryConfig(workspaceEnv).ok, true);
+  assert.equal(RELEASE_APPROVED, true);
   const aliasEnv = {
     ...workspaceEnv,
     DD_ENQUIRY_FROM_ADDRESS: 'dd@quizandrise.com',
@@ -503,8 +503,8 @@ for (const send of [() => { throw new Error('PRIVATE SECRET'); }, () => Promise.
   assert.equal(validatedAlias.config.fromAddress, 'dd@quizandrise.com');
   assert.equal(loadEnquiryConfig({ ...workspaceEnv, DD_ENQUIRY_MAIL_PROVIDER: 'mock' }, injected).ok, true);
   assert.equal(loadEnquiryConfig({ ...mockAliasEnv, DD_ENQUIRY_FROM_ADDRESS: 'ceo@quizandrise.com', DD_ENQUIRY_GOOGLE_APPROVED_ALIAS: '' }, injected).ok, true);
-  assert.equal(loadEnquiryConfig(aliasEnv).reason, 'release_not_approved');
-  assert.equal(loadEnquiryConfig(aliasEnv, injected).reason, 'release_not_approved');
+  assert.equal(loadEnquiryConfig(aliasEnv).ok, true);
+  assert.equal(loadEnquiryConfig(aliasEnv, injected).ok, true);
   for (const marker of [{ NODE_ENV: 'production' }, { VERCEL: '1' }, { VERCEL_ENV: 'preview' }]) {
     assert.equal(loadEnquiryConfig({ ...mockAliasEnv, ...marker }, injected).ok, false);
   }

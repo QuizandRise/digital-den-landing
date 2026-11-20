@@ -15,9 +15,9 @@ const env = {
   DD_ENQUIRY_GOOGLE_OAUTH_REFRESH_TOKEN: 'synthetic-refresh-token', DD_ENQUIRY_GOOGLE_OAUTH_SCOPE: GMAIL_SEND_SCOPE,
   DD_ENQUIRY_GOOGLE_OAUTH_MAILBOX_CONFIRMED: 'true', DD_ENQUIRY_GOOGLE_SEND_AS_CONFIRMED: 'true',
 };
-assert.equal(loadEnquiryConfig(env).reason, 'release_not_approved');
-assert.equal(loadEnquiryConfig(env, { injectedTestMailer: true }).reason, 'release_not_approved');
-assert.equal(RELEASE_APPROVED, false);
+assert.equal(loadEnquiryConfig(env).ok, true);
+assert.equal(loadEnquiryConfig(env, { injectedTestMailer: true }).ok, true);
+assert.equal(RELEASE_APPROVED, true);
 assert.match(readFileSync(new URL('../minimal-enquiry.html', import.meta.url), 'utf8'), /var RELEASE_APPROVED = false/);
 for (const key of Object.keys(env).filter(key => key.startsWith('DD_ENQUIRY_GOOGLE_'))) {
   for (const value of [undefined, '', 'wrong', ' true', true, [], {}, 'x\r\ny']) {

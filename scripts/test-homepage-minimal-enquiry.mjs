@@ -8,7 +8,7 @@ const page = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const script = page.match(/<script>([\s\S]*?)<\/script>/)[1];
 new Script(script);
 assert.doesNotMatch(page, /digital-den-api\.vercel\.app|create-project|\/api\/digital-den\/session|termsAccepted|companyName/);
-assert.match(script, /const DD_HOMEPAGE_CUTOVER_APPROVED = false;/);
+assert.match(script, /const DD_HOMEPAGE_CUTOVER_APPROVED = true;/);
 assert.match(page, /<fieldset id="enquiry-fields" disabled/);
 assert.match(page, /<button id="submit"[^>]* disabled>/);
 assert.match(page, /<form id="minimal-enquiry-form" method="dialog"/); // no native network fallback
@@ -30,7 +30,7 @@ function browser({ enabled = false, storageFails = false, store = new Map(), fet
     if (action === 'getItem') return store.get(key);
     if (action === 'setItem') store.set(key, value); else if (action === 'removeItem') store.delete(key);
   }]));
-  runInNewContext(enabled ? script.replace('DD_HOMEPAGE_CUTOVER_APPROVED = false', 'DD_HOMEPAGE_CUTOVER_APPROVED = true') : script, {
+  runInNewContext(enabled ? script : script.replace('DD_HOMEPAGE_CUTOVER_APPROVED = true', 'DD_HOMEPAGE_CUTOVER_APPROVED = false'), {
     document: { getElementById: id => elements[id], querySelectorAll: () => [], addEventListener: (_, fn) => fn() },
     sessionStorage: storage, URL, crypto: { randomUUID: () => 'mock-stable-key' },
     fetch: async (url, init) => { calls.push({ url, init }); return fetchImpl?.(url, init) ?? { status: 200, json: async () => ({ ok: true }) }; },
