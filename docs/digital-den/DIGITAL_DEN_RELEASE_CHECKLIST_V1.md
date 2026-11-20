@@ -1,0 +1,53 @@
+# Digital Den minimal enquiry — release checklist v1
+
+2026-11-20. **DISABLED — NOT RELEASE AUTHORISATION. Every gate below is pending.**
+Frontend `RELEASE_APPROVED = false`; existing server gate false and unchanged.
+Scope: agency enquiry → manual email response/delivery. No marketplace or database.
+No backend, tracked route, live account, credentials, deployment or paid action
+changed by this preparation. Local passing checks cannot clear external gates.
+
+Record a dated non-secret evidence reference, reviewer and owner decision for each
+gate in a separate approved release review; never store enquiry content or secrets.
+
+| Gate | Required evidence / decision | Status |
+| --- | --- | --- |
+| Actual host and company ownership | Identify frontend/API host, company-owned project and domain mapping; verify every ingress/preview/alias route and deployment hook. Do not assume a connected Vercel account owns this site. Preserve legacy routes and project isolation. | Pending |
+| Workspace authority and delivery | Verify independent Digital Den credential provenance, least-privilege gmail.send delegation, real mailbox/inbox ownership and access. Existing strict sender allowlist remains. Prior Admin evidence of dd@quizandrise.com under ceo@quizandrise.com does not prove Gmail send-as: verify exact accepted sender authorisation separately. | Pending |
+| Privacy notice and operations | Complete [privacy record](DD_PRIVACY_RELEASE_V1.md): actual postal address, tested/monitored privacy contact, purpose-to-lawful-basis mapping/LIA, provider contracts, logs, transfers, retention and deletion. Owner/privacy reviewer approves accurate visible notice before collection. | Pending |
+| Cross-instance abuse prevention | Verify host-enforced admission/rate controls across all reachable send routes, trusted IP overwrite/spoof handling, body/header/time limits and bypass prevention. Define limits, shared-IP impacts, monitor and stop thresholds. Warm-instance counters, CORS and honeypots alone do not clear this gate. | Pending |
+| Low-volume risk acceptance | Owner explicitly accepts residual duplicates, uncertain acceptance, loss/no recovery queue and manual mailbox workload; assigns operator/deputy, cadence and capacity. No exactly-once or inbox-delivery guarantee. If hard shared deduplication/global send ceiling is required, remain disabled pending separate design approval; do not add a database here. | Pending |
+| Exact artifact and bounded verification | Review exact local artifact and existing mock/security/isolation checks. Separately authorise a bounded integration test proving real provider acceptance and recipient receipt, honest failures, host ingress and abuse enforcement; agree test-mail deletion and costs first. No live testing performed here. | Pending |
+| Rollback and incident response | Assign operator, known disabled artifact/configuration, direct-POST block verification, stop triggers and reconciliation of in-flight/uncertain mail. Preserve existing routes/security; disabling only the button is insufficient. | Pending |
+| Final owner release approval | Approve exact artifact/destination, completed notice, operations, residual risk and cost exposure. Any later enabling of both gates or new route is a separate reviewed change. | Pending |
+
+## Risk boundaries
+
+A host-level edge rule may be considered only after actual routing, enforcement,
+counter scope and existing entitlement/cost exposure are verified. No vendor or plan
+is assumed. Per-IP rules can miss botnets and block shared networks; request limits
+do not deduplicate mail or guarantee a global cost ceiling. Owner risk acceptance
+cannot substitute for required privacy information or essential abuse controls.
+If protection, privacy terms or operating capacity are unresolved, remain disabled.
+
+Use the [manual triage procedure](DIGITAL_DEN_MINIMAL_ENQUIRY_INTAKE_V1.md): confirm
+possible duplicates by sender/service/time/brief, use one response thread, check sent
+mail, avoid auto-deletion and repeated retries. A 502/timeout may still have sent mail;
+200 confirms provider acceptance only. Labels do not enforce deletion.
+
+## Local checks, cost and rollback
+
+The intake record documents passing mock-only and standalone frontend checks.
+The scope audit found concurrent backend/test edits outside this pass; those were
+left untouched. A stable exact-artifact review remains pending. Existing backend security,
+mock/adversarial checks, both false gates, tracked files and release controls are
+preserved. No Actions, cloud builds, live requests to intake, mail or paid action.
+Potential avoidable consumption: duplicate sends and abuse from instance-local state
+and ambiguous acceptance. Mitigation: remain disabled, reconcile manually and verify
+cross-instance admission before release. No cost figures or savings asserted.
+Any purchase, upgrade, paid resource, higher spending limit or materially billable
+workflow requires explicit owner approval; none is requested or executed here.
+
+This pass can be reversed by restoring only the four permitted local untracked files
+from their prior versions. Do not reset other untracked work. A future live rollback
+requires the approved disabled server/frontend artifact, blocking direct submissions
+and manual reconciliation; it cannot unsend accepted email.
