@@ -613,7 +613,7 @@ for (const type of ['text/application/json', 'application/jsonp', 'application/j
 {
   const page = readFileSync(path.join(root, 'minimal-enquiry.html'), 'utf8');
   assert.match(page, /var RELEASE_APPROVED = false/);
-  assert.ok(/Retention and transfers — pending owner confirmation/.test(page), 'Privacy release blocker must remain visible');
+  assert.ok(/This notice must be checked against actual provider settings before live collection/.test(page), 'Privacy release blocker must remain visible');
   const script = page.match(/<script>([\s\S]*?)<\/script>/)[1].replace('var RELEASE_APPROVED = false', 'var RELEASE_APPROVED = true');
   const listeners = {};
   const elements = Object.fromEntries(['minimal-enquiry-form', 'notice', 'submit', 'privacy', 'name', 'email', 'service', 'brief', 'url', 'website'].map(id => [id, { value: '', checked: true, addEventListener(type, fn) { listeners[type] = fn; } }]));

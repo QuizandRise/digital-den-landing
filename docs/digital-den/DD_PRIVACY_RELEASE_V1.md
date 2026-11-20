@@ -1,6 +1,6 @@
 # Digital Den privacy release record v1
 
-20 November 2026 — **DRAFT; INTAKE DISABLED; OWNER VERIFICATION REQUIRED.**
+20 November 2026 — **OWNER RETENTION DECISION RECORDED; INTAKE DISABLED PENDING FINAL PROVIDER/LAWFUL BASIS VERIFICATION.**
 The complete visitor-facing draft is in `minimal-enquiry.html#privacy-notice`.
 This record explains its unresolved terms; it is not legal or release approval.
 
@@ -50,12 +50,16 @@ need their own appropriate scope, retention and privacy information before use.
 - **Recipients and providers:** verify authorised staff access, Google Workspace
   contracting entity/roles, actual hosting/security providers, processors/subprocessors,
   contracts and permissions. No sale or marketplace disclosure is proposed.
-- **Transfers:** establish overseas storage/access and destinations, applicable
+- **Transfers:** Vercel identifies US processing in its DPA; Google Workspace may
+  process data through approved global infrastructure. Verify account-specific
+  processor terms, actual access and transfer arrangements; establish applicable
   adequacy or other lawful safeguards, and how people can obtain details. A UK
   company or mailbox setting does not establish UK-only processing.
-- **Retention:** approve periods or clear criteria and start events for unanswered,
-  closed and converted enquiries; technical logs and duplicate/security state have
-  separate purposes. Assign review/deletion responsibility and cadence. Address
+- **Retention (owner-approved 20 November 2026):** enquiries not converted to paid
+  contracts: up to 12 months after last substantive correspondence; monthly manual
+  review/deletion. Converted work, statutory records and documented disputes follow
+  separately justified schedules. Technical logs and security state remain subject
+  to actual host/provider settings. Assign review/deletion responsibility and cadence. Address
   inbox, sent mail, trash, labelled duplicates, exports, backups, provider copies,
   deletion limits and justified legal holds. Do not fabricate 30/90-day promises.
 - **Rights and complaints:** verify ownership, proportionate identity checks,
@@ -69,6 +73,58 @@ need their own appropriate scope, retention and privacy information before use.
 - **Publication:** owner/privacy reviewer signs off completed visible text and date,
   ensuring it is accessible before collection. Pending terms cannot become a live
   privacy policy simply through risk acceptance.
+
+## Approved enquiry retention operations (20 November 2026)
+
+- **Controller decision:** ordinary enquiries not converted to a signed or paid
+  contract are reviewed and deleted from the Digital Den mailbox no later than
+  **12 months after the latest substantive correspondence**, unless a documented
+  legal hold, complaint, dispute or legal obligation justifies a longer period.
+- **Operator:** Quiz & Rise Ltd CEO controls the shared mailbox and performs a
+  monthly review of the `Digital Den` label, inbox, sent mail, trash and approved
+  exports. Any future deputy needs role-specific approval; no automatic user
+  deletion has been configured or falsely claimed. Manual review is operational,
+  not a guarantee of Gmail-provider backup erasure on the same date.
+- **Converted clients:** when an actual project contract is signed, the relevant
+  contractual, financial and legal record classes require a separate retention
+  schedule; the 12-month enquiry rule does not automatically override them.
+- **Legal hold:** document the reason, assigned approver, affected record and
+  next review date without indefinitely retaining unrelated enquiries.
+- **Access/deletion requests:** privacy@quizandrise.com was delivery-tested to
+  the CEO mailbox on 20 November 2026; use a privacy-rights review before deletion
+  or disclosure, and keep proof of compliance without over-retaining enquiry text.
+- **Technical processing:** Gmail server backups, Vercel request/security logs,
+  ephemeral rate counters, rejected traffic and session retry identifiers have
+  distinct host-controlled lifecycles. Obtain verified policy details before
+  claiming fixed deletion dates for provider infrastructure.
+
+## Legitimate-interests assessment — general business enquiry and abuse prevention
+
+**Purpose:** respond to an inbound request from a company representative, prepare
+an appropriate reply/quotation and prevent bot traffic or duplicate submissions.
+**Interest:** ordinary customer correspondence and reasonable anti-abuse protection
+for a small Scottish agency. **Necessity:** a name, reply address, service choice
+and brief are needed for a meaningful response; optional URL is not required.
+No client account, marketing subscription, profiling, location tracking or
+marketplace disclosure is part of the minimal enquiry route.
+**Balancing:** people submitting an enquiry expect a reply from the organisation
+contacted. Residual risks include sensitive information voluntarily entered in the
+brief and IP/security metadata. Mitigate by prominently warning against secrets
+or special-category data, role-limited mail access, no data resale or unrelated
+promotional outreach, concise 12-month enquiry retention, and easy objection at
+privacy@quizandrise.com. The controller must reconsider the balance if processing,
+recipient access, scale or automated decision-making changes.
+**Separate contract basis:** where the individual itself requests necessary steps
+towards its own contract, UK GDPR Article 6(1)(b) may instead apply. Do not claim
+that this basis automatically covers every employee/representative of a business.
+
+**Provider transparency:** Vercel publicly confirms US/global processing and UK
+transfer provisions in its [DPA](https://vercel.com/legal/dpa); Google publishes
+[Workspace international-transfer safeguards](https://cloud.google.com/security/compliance/eu-scc)
+and its [data-processing terms](https://cloud.google.com/terms/data-processing-terms).
+Applicable contractual terms, account-specific settings and provider log retention
+still need to be verified before releasing a definitive UK GDPR notice. Never
+promise that all data remains in the UK.
 
 ## Drafting references
 
