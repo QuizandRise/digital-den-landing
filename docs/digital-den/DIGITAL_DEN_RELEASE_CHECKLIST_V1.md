@@ -6,6 +6,8 @@ Scope: agency enquiry → manual email response/delivery. No marketplace or data
 No backend, tracked route, live account, credentials, deployment or paid action
 changed by this preparation. Local passing checks cannot clear external gates.
 
+**Evidence update 20 November 2026:** the host/project is independently identified, a route-limited Vercel WAF rule was published and bounded-tested, and Preview-only non-secret settings were installed. Retention and a draft legitimate-interests assessment were recorded. See [dated release evidence](DIGITAL_DEN_RELEASE_EVIDENCE_20261120.md). Two OAuth secrets, end-to-end preview, provider/retention operations and final production sign-off remain pending. The earlier blanket statement that no hosting changes occurred refers only to the original disabled preparation, not this dated update.
+
 Record a dated non-secret evidence reference, reviewer and owner decision for each
 gate in a separate approved release review; never store enquiry content or secrets.
 
