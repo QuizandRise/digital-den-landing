@@ -258,11 +258,12 @@ async function post(handlerApi, body, headerOverrides = {}) {
   assert.equal(sendCalled, true);
 }
 
-// --- Production form endpoint must remain unchanged ---
+// --- Homepage cutover must remain gated and isolated ---
 {
   const indexHtml = readFileSync(path.join(root, "index.html"), "utf8");
-  assert.match(indexHtml, /digital-den-api\.vercel\.app\/api\/create-project/);
-  assert.doesNotMatch(indexHtml, /\/api\/minimal-enquiry/);
+  assert.doesNotMatch(indexHtml, /digital-den-api\.vercel\.app\/api\/create-project/);
+  assert.match(indexHtml, /\/api\/minimal-enquiry/);
+  assert.match(indexHtml, /const DD_HOMEPAGE_CUTOVER_APPROVED = false/);
 
   const legacySend = readFileSync(path.join(root, "api/send.js"), "utf8");
   assert.match(legacySend, /api\.resend\.com/);
