@@ -13,14 +13,23 @@ assert.match(page, /<fieldset id="enquiry-fields" disabled/);
 assert.match(page, /<button id="submit"[^>]* disabled>/);
 assert.match(page, /<form id="minimal-enquiry-form" method="dialog"/); // no native network fallback
 assert.doesNotMatch(page.match(/<form[\s\S]*?<\/form>/)[0], /\saction=|formaction=/);
+const fallbackMarkup = page.match(/<p id="enquiry-email-fallback"[\s\S]*?<\/p>/)[0];
+assert.match(fallbackMarkup, /role="status" aria-live="polite" hidden>/);
+assert.match(fallbackMarkup, /No form details are included/);
+const fallbackLink = fallbackMarkup.match(/<a href="([^"]+)">Email dd@quizandrise.com<\/a>/)[1];
+assert.equal(fallbackLink, 'mailto:dd@quizandrise.com?subject=Digital%20Den%20enquiry');
+const mailto = new URL(fallbackLink);
+assert.deepEqual([...mailto.searchParams], [['subject', 'Digital Den enquiry']]);
+assert.doesNotMatch(script, /mailto:|\.click\(|\blocation\b|\bopen\(/, 'Fallback must be a static link with no automatic launch');
 for (const text of ['12 months after our last substantive correspondence', '6 Sicily Road, Inverness, IV2 3YL', 'privacy@quizandrise.com', 'Google Workspace', 'Vercel', 'Article 6(1)(b)', 'Article 6(1)(f)']) assert.ok(page.includes(text), text);
 const options = [...page.match(/<select id="service"[\s\S]*?<\/select>/)[0].matchAll(/<option>(.*?)<\/option>/g)].map(m => m[1]);
 assert.deepEqual(options, ALLOWED_SERVICES);
 
 function browser({ enabled = false, storageFails = false, store = new Map(), fetchImpl } = {}) {
   const listeners = {}, calls = [];
-  const ids = ['minimal-enquiry-form', 'enquiry-fields', 'submit', 'notice', 'privacy', 'name', 'email', 'service', 'brief', 'url', 'website', 'enquiry-gate'];
+  const ids = ['minimal-enquiry-form', 'enquiry-fields', 'submit', 'notice', 'enquiry-email-fallback', 'privacy', 'name', 'email', 'service', 'brief', 'url', 'website', 'enquiry-gate'];
   const elements = Object.fromEntries(ids.map(id => [id, { value: '', checked: true, disabled: true, addEventListener(type, fn) { listeners[type] = fn; } }]));
+  elements['enquiry-email-fallback'].hidden = true;
   Object.assign(elements.name, { value: 'Test Person' });
   elements.email.value = 'test@example.com'; elements.service.value = 'Website Design'; elements.brief.value = 'A local mock enquiry';
   const form = elements['minimal-enquiry-form'];
@@ -64,6 +73,7 @@ function browser({ enabled = false, storageFails = false, store = new Map(), fet
 }
 for (const storageFails of [false, true]) {
   const ui = browser({ storageFails });
+  assert.equal(ui.elements['enquiry-email-fallback'].hidden, true);
   ui.elements.submit.disabled = false; // even a synthetic/programmatic submit cannot bypass the constant
   await ui.submit(); ui.listeners.input(); ui.listeners.change();
   assert.equal(ui.calls.length, 0);
@@ -75,6 +85,7 @@ for (const status of [403, 429, 502, 503, 409]) {
   await ui.submit();
   assert.match(ui.elements.notice.className, /error/);
   assert.doesNotMatch(ui.elements.notice.textContent, /private provider/);
+  assert.equal(ui.elements['enquiry-email-fallback'].hidden, ![502, 503].includes(status));
   if (status === 502) assert.match(ui.elements.notice.textContent, /uncertain/);
   const first = ui.calls[0];
   assert.equal(first.url, '/api/minimal-enquiry');
@@ -95,6 +106,7 @@ for (const status of [403, 429, 502, 503, 409]) {
   finish({ status: 200, json: async () => ({ ok: true, message: '<untrusted>' }) }); await pending;
   assert.match(ui.elements.notice.textContent, /does not confirm inbox delivery/);
   assert.doesNotMatch(ui.elements.notice.textContent, /untrusted/);
+  assert.equal(ui.elements['enquiry-email-fallback'].hidden, true);
   await ui.submit(); assert.equal(ui.calls.length, 1); assert.equal(ui.elements.submit.disabled, true);
 }
 {
@@ -102,8 +114,24 @@ for (const status of [403, 429, 502, 503, 409]) {
   await ui.submit(); await ui.submit();
   assert.equal(ui.calls[0].init.body, ui.calls[1].init.body);
   assert.match(ui.elements.notice.textContent, /uncertain/);
+  assert.doesNotMatch(ui.elements.notice.textContent, /private network detail/);
+  assert.equal(ui.elements['enquiry-email-fallback'].hidden, false);
   const reloaded = browser({ enabled: true, store: ui.store }); await reloaded.submit();
   assert.equal(JSON.parse(reloaded.calls[0].init.body).idempotencyKey, JSON.parse(ui.calls[0].init.body).idempotencyKey);
+}
+{
+  let finish;
+  const ui = browser({ enabled: true, fetchImpl: () => new Promise(resolve => { finish = resolve; }) });
+  assert.equal(ui.elements['enquiry-email-fallback'].hidden, true);
+  const failed = ui.submit();
+  finish({ status: 503, json: async () => ({ ok: false }) }); await failed;
+  assert.equal(ui.elements['enquiry-email-fallback'].hidden, false);
+  const retry = ui.submit();
+  assert.equal(ui.elements['enquiry-email-fallback'].hidden, true, 'Hide stale fallback while retry is pending');
+  finish({ status: 200, json: async () => ({ ok: true }) }); await retry;
+  assert.equal(ui.elements['enquiry-email-fallback'].hidden, true, 'Successful retry clears fallback');
+  assert.equal(ui.calls[0].init.body, ui.calls[1].init.body);
+  assert.match(ui.elements.notice.className, /success/);
 }
 for (const mutate of [ui => { ui.elements.privacy.checked = false; }, ui => { ui.elements.website.value = 'spam'; }, ui => { ui.elements.url.value = 'https://user:password@example.com'; }, ui => { ui.elements.url.value = 'javascript:alert(1)'; }, ui => { ui.elements['minimal-enquiry-form'].checkValidity = () => false; }]) {
   const ui = browser({ enabled: true }); mutate(ui); await ui.submit(); assert.equal(ui.calls.length, 0);

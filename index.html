@@ -21,6 +21,7 @@ section{padding:26px 0}.hero{padding:34px 0 20px}.hero-grid{display:grid;grid-te
 @media(max-width:900px){.nav-links{display:none}.hero-grid,.assessment,.footer-grid{grid-template-columns:1fr}.hero{padding:22px 0 14px}.hero-grid{gap:14px}.hero-media{order:2}.section-head{align-items:start;flex-direction:column;gap:6px}.services{grid-template-columns:1fr 1fr}.service,.service.wide{grid-column:auto;min-height:0}.service.wide{grid-column:1/-1}.process{grid-template-columns:1fr 1fr}.step-card{grid-column:auto}.assessment-side{order:-1;border-left:0;border-bottom:1px solid var(--line)}.cases .case{flex-basis:74%}}
 @media(max-width:560px){.shell{width:min(100% - 12px,520px)}.nav-inner{min-height:54px}.brand{font-size:11px}.mark{width:29px;height:29px}.pill{font-size:10px;padding:7px 9px}.hero{padding:13px 0 10px}.hero-grid{gap:10px}h1{font-size:clamp(36px,11.3vw,47px)}.hero-copy{font-size:13px;margin:10px 0 7px}.hero-line{font-size:11px;margin-bottom:11px}.primary,.secondary{padding:8px 11px;font-size:11px}.trust{font-size:8px;margin-top:10px;gap:5px 10px}.hero-video{aspect-ratio:16/8.6}.hero-badge{font-size:6px}.eyebrow{font-size:7px;margin-bottom:6px}section{padding:13px 0}.section-head{margin-bottom:9px}.section-head h2{font-size:25px}.section-head p{font-size:11px}.services,.process{grid-template-columns:1fr;gap:7px}.service,.service.wide,.step-card{padding:12px;border-radius:14px}.service-icon{width:31px;height:31px;margin:7px 0 8px}.service h3{font-size:16px;margin:7px 0 3px}.service p,.step-card p,.case p{font-size:11px}.step-card h3{font-size:16px}.cases{gap:8px}.case{flex-basis:88%}.case-visual{height:174px}.case-body{padding:12px}.case-overlay{padding:14px}.case-overlay span{font-size:19px}.assessment{border-radius:15px}.assessment-main,.assessment-side{padding:14px 12px}.form-grid{grid-template-columns:1fr;gap:0}.field{margin-bottom:9px}input,select,textarea{padding:9px 10px;font-size:12px}.guided-fields,.mode-note{padding:9px;margin-bottom:9px}.work-slider{min-height:235px}.slide-visual{height:170px}.slide-title{font-size:17px}.footer-grid{grid-template-columns:1fr 1fr;gap:11px}.footer-brand{grid-column:1/-1}.footer-bottom{margin-top:11px}}
 .honeypot{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}.enquiry-privacy{margin-top:16px;color:var(--muted);font-size:12px}.enquiry-privacy summary{cursor:pointer;color:var(--cyan)}.enquiry-privacy p{margin-top:10px}.enquiry-privacy a{color:var(--cyan);text-decoration:underline}#minimal-enquiry-form input:focus-visible,#minimal-enquiry-form select:focus-visible,#minimal-enquiry-form textarea:focus-visible,#enquiry-privacy summary:focus-visible,#minimal-enquiry-form button:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+#enquiry-email-fallback a{color:var(--cyan);text-decoration:underline}#enquiry-email-fallback a:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
 </style>
 </head>
 <body>
@@ -33,6 +34,7 @@ section{padding:26px 0}.hero{padding:34px 0 20px}.hero-grid{display:grid;grid-te
 <section id="assessment"><div class="shell"><div class="assessment"><div class="assessment-main"><p class="eyebrow">Start a project</p><h2>Tell us what you want to create.</h2><p class="hero-copy">Tell us which service you need and share a short brief. A project link is optional. Our team reviews enquiries and replies by email.</p>
 <p class="mode-note" id="enquiry-gate">Online enquiries are currently disabled pending release review.</p>
 <div id="notice" class="notice" role="status" aria-live="polite"></div>
+<p id="enquiry-email-fallback" class="mode-note" role="status" aria-live="polite" hidden>You can contact Digital Den directly: <a href="mailto:dd@quizandrise.com?subject=Digital%20Den%20enquiry">Email dd@quizandrise.com</a>. This opens your email app only when selected. No form details are included; choose what to share and avoid sensitive information.</p>
 <form id="minimal-enquiry-form" method="dialog" aria-describedby="enquiry-gate" novalidate>
 <fieldset id="enquiry-fields" disabled style="border:0;padding:0;min-width:0">
 <div class="field honeypot" aria-hidden="true"><label for="website">Leave this field empty</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
@@ -63,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const fields = document.getElementById('enquiry-fields');
   const submit = document.getElementById('submit');
   const notice = document.getElementById('notice');
+  const emailFallback = document.getElementById('enquiry-email-fallback');
   const privacy = document.getElementById('privacy');
   let inFlight = false, accepted = false, attempted = false, retryPayload = null, memoryKey = '';
   const storageKey = 'dd.homepageMinimalEnquiryIdempotency';
@@ -109,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
     submit.textContent = 'Sending…';
     notice.className = 'notice';
     notice.textContent = '';
+    emailFallback.hidden = true;
     try {
       const response = await fetch('/api/minimal-enquiry', {
         method: 'POST', mode: 'same-origin', credentials: 'omit', redirect: 'error',
@@ -135,10 +139,12 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         notice.textContent = messages[response.status] || 'The enquiry was not confirmed. Please retry this same enquiry later.';
         notice.className = 'notice show error';
+        emailFallback.hidden = ![502, 503].includes(response.status);
       }
     } catch (_) {
       notice.textContent = 'The enquiry was not confirmed. Delivery may be uncertain. Please retry this same enquiry later; its retry identifier is retained.';
       notice.className = 'notice show error';
+      emailFallback.hidden = false;
     } finally {
       inFlight = false;
       submit.textContent = accepted ? 'Enquiry accepted' : (retryPayload ? 'Retry same enquiry' : 'Send enquiry');
