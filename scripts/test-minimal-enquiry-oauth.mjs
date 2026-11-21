@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { loadEnquiryConfig, GMAIL_SEND_SCOPE, RELEASE_APPROVED } from '../src/minimal-enquiry/config.js';
 import { createMailer, createGoogleWorkspaceMailer } from '../src/minimal-enquiry/mailer.js';
+import { createEnquiryHandler } from '../src/minimal-enquiry/handler.js';
 
 // Synthetic fixtures only. No local credential files, Keychain or real network.
 globalThis.fetch = async () => { throw new Error('Real network forbidden in local suite'); };
@@ -51,7 +52,7 @@ const config = {
 const message = { to: 'enquiries@example.com', from: config.fromAddress, subject: 'Synthetic test', text: 'Synthetic body' };
 const tokenData = { access_token: 'synthetic-access-token', token_type: 'Bearer', expires_in: 3600, scope: GMAIL_SEND_SCOPE };
 const failure = { ok: false, error: 'delivery_unconfirmed', messageId: null };
-function mockFetch({ token = tokenData, ack = { id: 'synthetic-gmail-id' }, tokenOk = true, sendOk = true } = {}) {
+function mockFetch({ token = tokenData, ack = { id: 'synthetic-gmail-id' }, tokenOk = true, sendOk = true, tokenStatus = 200, sendStatus = 200 } = {}) {
   const calls = [];
   return { calls, fetchImpl: async (url, init) => {
     calls.push(url);
@@ -64,16 +65,15 @@ function mockFetch({ token = tokenData, ack = { id: 'synthetic-gmail-id' }, toke
       assert.deepEqual(Object.fromEntries(init.body), {
         grant_type: 'refresh_token', client_id: config.google.oauthClientId,
         client_secret: config.google.oauthClientSecret, refresh_token: config.google.oauthRefreshToken,
-        scope: GMAIL_SEND_SCOPE,
       });
-      return { ok: tokenOk, json: async () => token };
+      return { ok: tokenOk, status: tokenStatus, json: async () => token };
     }
     assert.equal(calls.length, 2); // no automatic retries
     assert.equal(url, 'https://gmail.googleapis.com/gmail/v1/users/ceo%40quizandrise.com/messages/send');
     assert.equal(init.headers.Authorization, 'Bearer synthetic-access-token');
     const raw = Buffer.from(JSON.parse(init.body).raw, 'base64url').toString();
     assert.match(raw, /From: .* <dd@quizandrise\.com>\r\n/);
-    return { ok: sendOk, json: async () => ack };
+    return { ok: sendOk, status: sendStatus, json: async () => ack };
   } };
 }
 {
@@ -86,7 +86,8 @@ for (const patch of [
   { access_token: undefined }, { access_token: '' }, { access_token: 'bad\r\nHeader' },
   { access_token: {} }, { token_type: undefined }, { token_type: 'Basic' },
   { expires_in: '3600' }, { expires_in: 0 }, { expires_in: -1 },
-  { expires_in: 1.5 }, { scope: '' },
+  { expires_in: 1.5 }, { expires_in: NaN }, { expires_in: Infinity }, { scope: '' },
+  { scope: null }, { scope: [GMAIL_SEND_SCOPE] }, { scope: `${GMAIL_SEND_SCOPE} ` },
   { scope: `${GMAIL_SEND_SCOPE} openid` }, { scope: 'https://mail.google.com/' },
   { error: 'invalid_grant', error_description: 'synthetic-private-error' },
 ]) {
@@ -152,3 +153,86 @@ for (const phase of ['token-fetch', 'token-body', 'send-fetch', 'send-body', 'th
   assert.equal(aborted, !['throw', 'bad-json'].includes(phase));
   assert.ok(calls <= 2);
 }
+
+// A late token response after cancellation must never start a Gmail send, even
+// if a faulty transport ignores AbortSignal. No sleeps or real network required.
+{
+  let resolveToken, signal;
+  const calls = [];
+  const pending = new Promise(resolve => { resolveToken = resolve; });
+  const result = await createMailer(config, { timeoutMs: 15, fetchImpl: async (url, init) => {
+    calls.push(url);
+    signal = init.signal;
+    return pending;
+  } }).send(message);
+  assert.deepEqual(result, failure);
+  assert.equal(signal.aborted, true);
+  resolveToken({ ok: true, json: async () => tokenData });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(calls, ['https://oauth2.googleapis.com/token']);
+}
+
+// HTTP rejection, including throttling and transient failures, never retries.
+// Repeated identical requests retain uncertain outcomes; new keys still consume
+// the per-IP limit and the sixth request cannot reach the provider.
+for (const phase of ['token', 'send']) {
+  for (const status of [400, 401, 429, 500, 503]) {
+    const deps = mockFetch(phase === 'token'
+      ? { tokenOk: false, tokenStatus: status, token: { error: 'invalid_grant', error_description: 'synthetic-private-error' } }
+      : { sendOk: false, sendStatus: status, ack: { error: 'synthetic-private-error' } });
+    const api = createEnquiryHandler({ env, mailerDeps: deps });
+    const payload = {
+      name: 'Synthetic Example', email: 'synthetic@example.com', service: 'Website Design',
+      brief: 'Synthetic regression fixture', privacyAccepted: true, idempotencyKey: 'failure-key',
+    };
+    const post = key => api.handle({ method: 'POST', clientIp: '203.0.113.10',
+      headers: { origin: 'https://example.com', 'content-type': 'application/json' },
+      rawBody: JSON.stringify({ ...payload, idempotencyKey: key }),
+    });
+    const responses = await Promise.all([post('failure-key'), post('failure-key')]);
+    responses.push(await post('failure-key'));
+    assert.deepEqual(responses.map(res => res.statusCode), [502, 502, 502]);
+    assert.equal(deps.calls.length, phase === 'token' ? 1 : 2);
+    for (const res of responses) {
+      assert.equal(JSON.parse(res.body).error, 'delivery_unconfirmed');
+      assert.doesNotMatch(res.body, /synthetic-private-error|invalid_grant|synthetic-.*token|synthetic@example/);
+    }
+    // Deliberately fail any later provider calls, without a retry loop.
+    await post('new-key-1');
+    await post('new-key-2');
+    const callsBeforeLimit = deps.calls.length;
+    const limited = await post('new-key-3');
+    assert.equal(limited.statusCode, 429);
+    assert.ok(Number(limited.headers['Retry-After']) > 0);
+    assert.equal(deps.calls.length, callsBeforeLimit);
+  }
+}
+
+// Production diagnostics contain only allowlisted category/status/stage, even
+// when Google returns private fields or an attacker-controlled error string.
+{
+  const savedWarn = console.warn;
+  const savedMode = process.env.VERCEL_ENV;
+  const logs = [];
+  try {
+    process.env.VERCEL_ENV = 'production';
+    console.warn = (...args) => { logs.push(args); };
+    for (const error of ['invalid_grant', 'synthetic-private-error']) {
+      const deps = mockFetch({ tokenOk: false, tokenStatus: 400,
+        token: { error, error_description: 'synthetic-private-description', access_token: 'synthetic-private-token' } });
+      assert.deepEqual(await createMailer(config, deps).send(message), failure);
+      assert.equal(deps.calls.length, 1);
+    }
+  } finally {
+    console.warn = savedWarn;
+    if (savedMode === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = savedMode;
+  }
+  assert.deepEqual(logs, [
+    ['DigitalDen OAuth rejection category:', 'invalid_grant', 'HTTP:', 400],
+    ['DigitalDen enquiry provider rejected at stage:', 'oauth_exchange'],
+    ['DigitalDen OAuth rejection category:', 'other', 'HTTP:', 400],
+    ['DigitalDen enquiry provider rejected at stage:', 'oauth_exchange'],
+  ]);
+}
+console.log('Minimal enquiry OAuth mock regressions passed (no real network).');
