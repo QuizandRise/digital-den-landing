@@ -169,12 +169,14 @@ export function createGoogleWorkspaceMailer(config, deps = {}) {
         const token = await withDeadline(async signal => {
           // Legacy JWT test seam is never used for refresh-token mode.
           if (!oauth && deps.tokenFetcher) return deps.tokenFetcher(jwt, signal);
+          // Use Google's documented refresh fields without a scope override;
+          // inherit the approved grant. Keep exact send-only config validation
+          // and reject a different returned scope.
           const res = await fetchImpl('https://oauth2.googleapis.com/token', {
             method: 'POST', signal, redirect: 'error', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams(oauth ? {
               grant_type: 'refresh_token', client_id: config.google.oauthClientId,
               client_secret: config.google.oauthClientSecret, refresh_token: config.google.oauthRefreshToken,
-              scope: GMAIL_SEND_SCOPE,
             } : { grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }),
           });
           const data = await res.json();
@@ -185,8 +187,9 @@ export function createGoogleWorkspaceMailer(config, deps = {}) {
             const category = typeof data?.error === 'string' && safe.has(data.error) ? data.error : 'other';
             if (process.env.VERCEL_ENV === 'production') console.warn('DigitalDen OAuth rejection category:', category, 'HTTP:', Number.isInteger(res.status) ? res.status : 'unknown');
           }
-          // Fail closed if Google does not explicitly acknowledge a send-only
-          // Bearer grant. Never persist tokens or expose provider error payloads.
+          // Require Bearer; an omitted scope inherits the owner-confirmed grant,
+          // rather than independently proving its scope. Never persist tokens
+          // or expose provider error payloads.
           if (data?.error || (oauth && (typeof data?.token_type !== 'string' || !/^bearer$/i.test(data.token_type) ||
               (data?.scope !== undefined && data.scope !== GMAIL_SEND_SCOPE) ||
               (data?.expires_in !== undefined && (!Number.isSafeInteger(data.expires_in) || data.expires_in < 1))))) throw new Error('token_failed');
